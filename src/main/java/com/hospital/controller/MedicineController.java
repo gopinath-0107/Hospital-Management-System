@@ -4,6 +4,7 @@ import com.hospital.dto.MedicineRequest;
 import com.hospital.dto.MedicineResponse;
 import com.hospital.dto.StockUpdateRequest;
 import com.hospital.service.MedicineService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class MedicineController {
     private final MedicineService medicineService;
 
     @PostMapping
-    public ResponseEntity<MedicineResponse> addMedicine(@RequestBody MedicineRequest request) {
+    public ResponseEntity<MedicineResponse> addMedicine(@Valid @RequestBody MedicineRequest request) {
         return new ResponseEntity<>(medicineService.addMedicine(request), HttpStatus.CREATED);
     }
 

@@ -15,5 +15,6 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
 
     Optional<Billing> findByAppointmentId(Long appointmentId);
 
+
     boolean existsByAppointmentId(Long appointmentId);
 }

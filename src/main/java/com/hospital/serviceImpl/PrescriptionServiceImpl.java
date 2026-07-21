@@ -54,10 +54,10 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             );
         }
 
-        if (appointment.getStatus() != AppointmentStatus.APPROVED) {
+        if (appointment.getStatus() != AppointmentStatus.CONSULTATION_DONE) {
 
             throw new IllegalStateException(
-                    "Prescription can only be created for APPROVED appointments."
+                    "Prescription can only be created for CONSULTATION_DONE appointments."
             );
 
         }
@@ -284,6 +284,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
 
 
+
         PrescriptionResponse response =
                 new PrescriptionResponse();
 
@@ -297,6 +298,27 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 prescription.getAppointment().getId()
         );
 
+
+        response.setPatientName(
+                prescription.getAppointment()
+                        .getPatient()
+                        .getFirstName()
+                        + " " +
+                        prescription.getAppointment()
+                                .getPatient()
+                                .getLastName()
+        );
+
+        response.setDoctorName(
+                "Dr. " +
+                        prescription.getAppointment()
+                                .getDoctor()
+                                .getFirstName()
+                        + " " +
+                        prescription.getAppointment()
+                                .getDoctor()
+                                .getLastName()
+        );
 
         response.setDiagnosis(
                 prescription.getDiagnosis()

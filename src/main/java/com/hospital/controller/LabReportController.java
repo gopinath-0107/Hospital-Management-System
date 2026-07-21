@@ -37,11 +37,11 @@ public class LabReportController {
     )
     public ResponseEntity<LabReportResponse> uploadReport(
 
-            @RequestParam Long labOrderId,
+            @Valid @RequestParam Long labOrderId,
 
-            @RequestParam MultipartFile file,
+              @RequestParam MultipartFile file,
 
-            @RequestParam String report
+              @RequestParam String report
 
     ){
 

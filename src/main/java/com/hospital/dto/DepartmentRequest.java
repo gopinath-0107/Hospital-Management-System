@@ -1,8 +1,11 @@
 package com.hospital.dto;
 
 import com.hospital.enums.Status;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,13 +17,26 @@ import lombok.NoArgsConstructor;
 public class DepartmentRequest {
 
     @NotBlank(message = "Department name is required")
-    @Size(max = 100, message = "Department name must not exceed 100 characters")
+    @Size(
+            min = 2,
+            max = 100,
+            message = "Department name must be between 2 and 100 characters"
+    )
+    @Pattern(
+            regexp = "^[A-Za-z ]+$",
+            message = "Department name must contain only letters and spaces"
+    )
     private String departmentName;
 
-    @Size(max = 255, message = "Description must not exceed 255 characters")
+    @Size(
+            max = 500,
+            message = "Description cannot exceed 500 characters"
+    )
     private String description;
 
     @NotNull(message = "Floor number is required")
+    @Min(value = 0, message = "Floor number cannot be negative")
+    @Max(value = 100, message = "Floor number cannot be greater than 100")
     private Integer floorNumber;
 
     @NotNull(message = "Status is required")

@@ -49,10 +49,10 @@ public class PharmacyServiceImpl implements PharmacyService {
         Appointment appointment =
                 prescription.getAppointment();
 
-        if (appointment.getStatus() != AppointmentStatus.APPROVED) {
+        if (appointment.getStatus() != AppointmentStatus.CONSULTATION_DONE) {
 
             throw new RuntimeException(
-                    "Appointment is not approved."
+                    "Appointment is not CONSULTATION_DONE."
             );
         }
 

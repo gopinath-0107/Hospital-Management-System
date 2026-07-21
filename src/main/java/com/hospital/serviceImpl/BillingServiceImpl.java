@@ -25,167 +25,142 @@ public class BillingServiceImpl implements BillingService {
     private final BillingRepository billingRepository;
     private final PaymentRepository paymentRepository;
     private final PatientRepository patientRepository;
-    private final AppointmentRepository appointmentRepository;
     private final PrescriptionRepository prescriptionRepository;
+
     private final LabOrderRepository labOrderRepository;
+    private final AppointmentRepository appointmentRepository;
+
 
 
     @Override
     public BillingResponse generateBill(BillingRequest request) {
 
-
-        Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
+        // 1. Appointment
+        Appointment appointment = appointmentRepository
+                .findById(request.getAppointmentId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Appointment not found"));
+                        new ResourceNotFoundException(
+                                "Appointment not found"));
 
+        // 2. Duplicate Bill Check
+        if (billingRepository.existsByAppointmentId(
+                request.getAppointmentId())) {
+
+            throw new RuntimeException(
+                    "Bill already generated");
+        }
+
+        // 3. Appointment// CONSULTATION_DONE Status Check
+        if (appointment.getStatus() != AppointmentStatus.CONSULTATION_DONE) {
+
+            throw new RuntimeException(
+                    "CONSULTATION_DONE is not completed");
+        }
+
+        Patient patient = appointment.getPatient();
+
+        // 4. Prescription
         Prescription prescription =
                 prescriptionRepository
                         .findByAppointmentId(
-                                appointment.getId()
-                        )
+                                appointment.getId())
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
-                                        "Prescription not found"
-                                ));
+                                        "Prescription not found"));
 
-
+        // 5. Pharmacy Check
         if (!prescription.getMedicines().isEmpty()) {
 
-            if (prescription.getStatus() != PrescriptionStatus.DISPENSED) {
+            if (prescription.getStatus()
+                    != PrescriptionStatus.DISPENSED) {
 
                 throw new RuntimeException(
-                        "Medicines not dispensed"
-                );
+                        "Medicines not dispensed");
             }
-
         }
 
-
+        // 6. Lab Check
         Optional<LabOrder> labOrder =
                 labOrderRepository
                         .findFirstByAppointmentId(
-                                appointment.getId()
-                        );
+                                appointment.getId());
 
         if (labOrder.isPresent()) {
 
-            if (labOrder.get().getStatus() != LabOrderStatus.COMPLETED) {
+            if (labOrder.get().getStatus()
+                    != LabOrderStatus.COMPLETED) {
 
                 throw new RuntimeException(
-                        "Lab report pending"
-                );
+                        "Lab report pending");
             }
-
         }
 
-        if(billingRepository.existsByAppointmentId(
-                request.getAppointmentId())){
-
-            throw new RuntimeException(
-                    "Bill already generated"
-            );
-        }
-
-        if (appointment.getStatus() != AppointmentStatus.APPROVED) {
-            throw new RuntimeException(
-                    "Billing can only be generated for approved appointments."
-            );
-        }
-
-        Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Patient not found"));
-
-
-                prescriptionRepository.findByAppointmentId(
-                        appointment.getId()
-                ).orElseThrow(() ->
-                        new ResourceNotFoundException("Prescription not found"));
-
-        if (prescription.getStatus() != PrescriptionStatus.DISPENSED) {
-            throw new RuntimeException(
-                    "Medicine must be dispensed before billing."
-            );
-        }
-
-
-
-
-
+        // 7. Consultation Fee
         BigDecimal consultationFee =
-                request.getConsultationFee() != null ?
-                        request.getConsultationFee() :
-                        BigDecimal.ZERO;
+                appointment.getDoctor()
+                        .getConsultationFee();
 
-
+        // 8. Medicine Amount
         BigDecimal medicineAmount =
-                request.getMedicineAmount() != null ?
-                        request.getMedicineAmount() :
-                        BigDecimal.ZERO;
+                BigDecimal.ZERO;
 
+        for (PrescriptionMedicine pm :
+                prescription.getMedicines()) {
 
+            BigDecimal amount =
+                    pm.getMedicine()
+                            .getPrice()
+                            .multiply(
+                                    BigDecimal.valueOf(
+                                            pm.getQuantity()));
+
+            medicineAmount =
+                    medicineAmount.add(amount);
+        }
+
+        // 9. Lab Amount
         BigDecimal labAmount =
-                request.getLabAmount() != null ?
-                        request.getLabAmount() :
-                        BigDecimal.ZERO;
+                BigDecimal.ZERO;
 
+        if (labOrder.isPresent()) {
 
+            labAmount =
+                    labOrder.get()
+                            .getLabTest()
+                            .getPrice();
+        }
+
+        // 10. Discount
         BigDecimal discount =
-                request.getDiscount() != null ?
-                        request.getDiscount() :
-                        BigDecimal.ZERO;
+                request.getDiscount() == null
+                        ? BigDecimal.ZERO
+                        : request.getDiscount();
 
-
-
+        // 11. Total Amount
         BigDecimal totalAmount =
                 consultationFee
                         .add(medicineAmount)
                         .add(labAmount)
                         .subtract(discount);
 
+        // 12. Save Billing
+        Billing billing =
+                Billing.builder()
+                        .patient(patient)
+                        .appointment(appointment)
+                        .consultationFee(consultationFee)
+                        .medicineAmount(medicineAmount)
+                        .labAmount(labAmount)
+                        .discount(discount)
+                        .totalAmount(totalAmount)
+                        .billingStatus(BillingStatus.UNPAID)
+                        .build();
 
-
-        Billing billing = Billing.builder()
-                .patient(patient)
-                .appointment(appointment)
-                .consultationFee(consultationFee)
-                .medicineAmount(medicineAmount)
-                .labAmount(labAmount)
-                .discount(discount)
-                .totalAmount(totalAmount)
-                .billingStatus(BillingStatus.UNPAID)
-                .build();
-
-
-
-        Billing savedBilling = billingRepository.save(billing);
-
+        Billing savedBilling =
+                billingRepository.save(billing);
 
         return mapToResponse(savedBilling);
-
     }
-
-
-
-
-
-    @Override
-    public BillingResponse getBillById(Long billingId) {
-
-
-        Billing billing = billingRepository.findById(billingId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Bill not found"));
-
-
-        return mapToResponse(billing);
-
-    }
-
-
-
-
-
     @Override
     public List<BillingResponse> getAllBills() {
 
@@ -327,6 +302,16 @@ public class BillingServiceImpl implements BillingService {
                 .paymentStatus(payment.getPaymentStatus().name())
                 .paymentDate(payment.getPaymentDate())
                 .build();
+    }
+
+    @Override
+    public BillingResponse getBillById(Long billingId) {
+
+        Billing billing = billingRepository.findById(billingId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Bill not found"));
+
+        return mapToResponse(billing);
     }
 
 }

@@ -22,7 +22,7 @@ public class PatientController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('PATIENT', 'RECEPTIONIST', 'ADMIN')")
     @Operation(summary = "View Patient profile details (PATIENT/RECEPTIONIST/ADMIN)")
-    public ResponseEntity<UserResponse> getPatientProfile(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> getPatientProfile( @PathVariable Long id) {
         UserResponse response = patientService.getPatientProfile(id);
         return ResponseEntity.ok(response);
     }

@@ -3,6 +3,7 @@ package com.hospital.controller;
 import com.hospital.dto.PharmacistRequest;
 import com.hospital.dto.PharmacistResponse;
 import com.hospital.service.PharmacistService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class PharmacistController {
     // Create Pharmacist
     @PostMapping
     public ResponseEntity<PharmacistResponse> createPharmacist(
-            @RequestBody PharmacistRequest request) {
+            @Valid @RequestBody PharmacistRequest request) {
 
         PharmacistResponse response =
                 pharmacistService.createPharmacist(request);

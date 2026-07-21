@@ -2,6 +2,7 @@ package com.hospital.controller;
 
 import com.hospital.dto.CreateConsultationRequest;
 import com.hospital.service.ConsultationService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class ConsultationController {
     @PostMapping
     @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<?> create(
-            @RequestBody CreateConsultationRequest request){
+            @Valid @RequestBody CreateConsultationRequest request){
 
         return ResponseEntity.ok(
                 consultationService.createConsultation(request)

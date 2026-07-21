@@ -19,6 +19,8 @@ public interface LabOrderRepository extends JpaRepository<LabOrder, Long> {
 
     List<LabOrder> findByAppointmentPatientId(Long patientId);
 
+
+
     Optional<LabOrder> findFirstByAppointmentId(Long appointmentId);
 
     long countByStatus(LabOrderStatus status);

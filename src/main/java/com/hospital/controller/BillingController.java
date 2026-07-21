@@ -2,6 +2,7 @@ package com.hospital.controller;
 
 import com.hospital.dto.*;
 import com.hospital.service.BillingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -78,7 +79,7 @@ public class BillingController {
     @PostMapping("/{id}/payment")
     public ResponseEntity<PaymentResponse> makePayment(
             @PathVariable Long id,
-            @RequestBody PaymentRequest request) {
+            @Valid @RequestBody PaymentRequest request) {
 
 
         PaymentResponse response =

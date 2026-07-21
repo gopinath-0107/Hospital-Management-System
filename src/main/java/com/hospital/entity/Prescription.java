@@ -30,9 +30,13 @@ public class Prescription {
     @Column(nullable = false, length = 500)
     private String diagnosis;
 
-    @OneToMany(mappedBy = "prescription",
-            cascade = CascadeType.ALL)
-    private List<PrescriptionMedicine> medicines;
+    @OneToMany(
+            mappedBy = "prescription",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private List<PrescriptionMedicine> medicines = new ArrayList<>();
 
     @Column(length = 1000)
     private String instructions;
