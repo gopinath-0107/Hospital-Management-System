@@ -1,5 +1,8 @@
 package com.hospital.dto;
 
+import com.hospital.enums.PaymentMode;
+import com.hospital.enums.PaymentStatus;
+import com.hospital.enums.PaymentType;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -12,25 +15,17 @@ import java.time.LocalDateTime;
 @Builder
 public class ReceiptResponse {
 
-    private Long billingId;
+    private String receiptNumber;
 
-    private Long patientId;
+    private String transactionId;
 
-    private Long appointmentId;
+    private BigDecimal amount;
 
-    private BigDecimal consultationFee;
+    private PaymentMode paymentMode;
 
-    private BigDecimal medicineAmount;
+    private PaymentType paymentType;
 
-    private BigDecimal labAmount;
-
-    private BigDecimal discount;
-
-    private BigDecimal totalAmount;
-
-    private String paymentMode;
-
-    private String paymentStatus;
+    private PaymentStatus paymentStatus;
 
     private LocalDateTime paymentDate;
 

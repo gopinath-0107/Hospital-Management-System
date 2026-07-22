@@ -70,9 +70,6 @@ public class CreateLabTechnicianRequest {
     )
     private String certificateNumber;
 
-    @NotNull(message = "Department is required")
-    @Positive(message = "Department Id must be greater than 0")
-    private Long departmentId;
 
     @NotNull(message = "Shift is required")
     private Shift shift;

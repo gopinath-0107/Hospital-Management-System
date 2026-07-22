@@ -67,7 +67,7 @@ public class AppointmentController {
 
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('RECEPTIONIST')")
     public ResponseEntity<AppointmentResponse> approveAppointment(@PathVariable Long id) {
 
         return ResponseEntity.ok(
@@ -77,7 +77,7 @@ public class AppointmentController {
 
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('RECEPTIONIST')")
     public ResponseEntity<AppointmentResponse> rejectAppointment(@PathVariable Long id) {
 
         return ResponseEntity.ok(
@@ -87,7 +87,7 @@ public class AppointmentController {
 
 
     @PutMapping("/{id}/complete")
-    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR')")
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPTIONIST')")
     public ResponseEntity<AppointmentResponse> completeAppointment(@PathVariable Long id) {
 
         return ResponseEntity.ok(

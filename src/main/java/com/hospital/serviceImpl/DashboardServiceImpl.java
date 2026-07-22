@@ -1,28 +1,24 @@
 package com.hospital.serviceImpl;
 
-
 import com.hospital.dto.AdminDashboardResponse;
 import com.hospital.dto.DoctorDashboardResponse;
 import com.hospital.dto.LabDashboardResponse;
 import com.hospital.dto.PharmacyDashboardResponse;
-import com.hospital.entity.Billing;
-import com.hospital.enums.BillingStatus;
+import com.hospital.entity.Payment;
 import com.hospital.enums.LabOrderStatus;
 import com.hospital.enums.LabReportStatus;
+import com.hospital.enums.PaymentStatus;
 import com.hospital.repo.*;
 import com.hospital.service.DashboardService;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
-
 
     private final PatientRepository patientRepository;
 
@@ -36,55 +32,41 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final PharmacistRepository pharmacistRepository;
 
-
-    private final LabOrderRepository labOrderRepository;
-
-    private final LabReportRepository labReportRepository;
-
-
     private final AppointmentRepository appointmentRepository;
 
     private final ConsultationRepository consultationRepository;
 
     private final PrescriptionRepository prescriptionRepository;
 
-
     private final MedicineRepository medicineRepository;
 
     private final PharmacyDispenseRepository pharmacyDispenseRepository;
 
+    private final LabOrderRepository labOrderRepository;
 
-    private final BillingRepository billingRepository;
+    private final LabReportRepository labReportRepository;
 
+    private final PaymentRepository paymentRepository;
 
-
-    // ================= ADMIN DASHBOARD =================
+    // ==========================
+    // ADMIN DASHBOARD
+    // ==========================
 
     @Override
     public AdminDashboardResponse getAdminDashboard() {
 
-
         BigDecimal totalRevenue = BigDecimal.ZERO;
 
+        List<Payment> payments = paymentRepository.findAll();
 
-        List<Billing> paidBills =
-                billingRepository.findByBillingStatus(BillingStatus.PAID);
+        for (Payment payment : payments) {
 
+            if (payment.getPaymentStatus() == PaymentStatus.PAID
+                    && payment.getAmount() != null) {
 
-
-        for (Billing billing : paidBills) {
-
-
-            if (billing.getTotalAmount() != null) {
-
-                totalRevenue =
-                        totalRevenue.add(
-                                billing.getTotalAmount()
-                        );
+                totalRevenue = totalRevenue.add(payment.getAmount());
             }
         }
-
-
 
         return AdminDashboardResponse.builder()
 
@@ -127,39 +109,24 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
 
-
-
-
-
-    // ================= DOCTOR DASHBOARD =================
-
+    // ==========================
+    // DOCTOR DASHBOARD
+    // ==========================
 
     @Override
     public DoctorDashboardResponse getDoctorDashboard(Long doctorId) {
 
-
         long totalAppointments =
-                appointmentRepository
-                        .countByDoctorId(doctorId);
-
-
+                appointmentRepository.countByDoctorId(doctorId);
 
         long totalConsultations =
-                consultationRepository
-                        .countByDoctorId(doctorId);
-
-
+                consultationRepository.countByDoctorId(doctorId);
 
         long totalPrescriptions =
                 prescriptionRepository
                         .countByAppointmentDoctorId(doctorId);
 
-
-
-        long totalPatients =
-                totalAppointments;
-
-
+        long totalPatients = totalAppointments;
 
         return DoctorDashboardResponse.builder()
 
@@ -181,36 +148,27 @@ public class DashboardServiceImpl implements DashboardService {
 
                 .build();
     }
-
-
-
-
-
-
-    // ================= PHARMACY DASHBOARD =================
-
+    // ==========================
+    // PHARMACY DASHBOARD
+    // ==========================
 
     @Override
     public PharmacyDashboardResponse getPharmacyDashboard() {
 
-
         Long totalMedicineStock =
                 medicineRepository.getTotalMedicineStock();
-
 
         long lowStockMedicines =
                 medicineRepository.countByStockQuantityLessThan(10);
 
-
         long totalDispensed =
                 pharmacyDispenseRepository.count();
 
-
-
-
         return PharmacyDashboardResponse.builder()
 
-                .totalMedicines(totalMedicineStock)
+                .totalMedicines(
+                        totalMedicineStock
+                )
 
                 .lowStockMedicines(
                         lowStockMedicines
@@ -221,48 +179,30 @@ public class DashboardServiceImpl implements DashboardService {
                 )
 
                 .build();
-
     }
 
-
-
-
-
-
-
-    // ================= LAB DASHBOARD =================
-
+    // ==========================
+    // LAB DASHBOARD
+    // ==========================
 
     @Override
     public LabDashboardResponse getLabDashboard() {
 
-
-
         long totalLabOrders =
                 labOrderRepository.count();
 
-
-
         long pendingTests =
-                labOrderRepository
-                        .countByStatus(
-                                LabOrderStatus.PENDING
-                        );
-
-
+                labOrderRepository.countByStatus(
+                        LabOrderStatus.PENDING
+                );
 
         long completedReports =
                 labReportRepository.countByStatus(
                         LabReportStatus.UPLOADED
                 );
 
-
         long totalReports =
                 labReportRepository.count();
-
-
-
-
 
         return LabDashboardResponse.builder()
 
@@ -283,8 +223,6 @@ public class DashboardServiceImpl implements DashboardService {
                 )
 
                 .build();
-
     }
-
 
 }

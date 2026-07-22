@@ -1,17 +1,20 @@
 package com.hospital.repo;
 
 import com.hospital.entity.Payment;
-import com.hospital.enums.PaymentStatus;
+import com.hospital.enums.PaymentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
-    List<Payment> findByBillingId(Long billingId);
+    List<Payment> findByPaymentType(PaymentType paymentType);
 
-    List<Payment> findByPaymentStatus(PaymentStatus paymentStatus);
+    Optional<Payment> findByAppointmentId(Long appointmentId);
 
-    boolean existsByBillingId(Long billingId);
+    Optional<Payment> findByPrescriptionId(Long prescriptionId);
+
+    Optional<Payment> findByLabOrderId(Long labOrderId);
 
 }

@@ -89,11 +89,18 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
 
 
+                        .requestMatchers("/api/receptionists/**")
+                        .hasRole("RECEPTIONIST")
+
+
+                        .requestMatchers("/api/lab-technicians/**")
+                        .hasRole("LAB_TECHNICIAN")
+
 
                         .requestMatchers(
-                                "/api/nurses/**",
-                                "/api/receptionists/**",
-                                "/api/lab-technicians/**"
+                                "/api/nurses/**"
+
+
                         )
                         .authenticated()
 

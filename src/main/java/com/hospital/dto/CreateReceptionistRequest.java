@@ -57,11 +57,6 @@ public class CreateReceptionistRequest {
     private Gender gender;
 
 
-    @NotNull(message = "Department ID is required")
-    @Positive(message = "Department ID must be greater than 0")
-    private Long departmentId;
-
-
     @NotNull(message = "Shift is required")
     private Shift shift;
 

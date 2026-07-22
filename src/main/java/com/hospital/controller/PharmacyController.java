@@ -1,8 +1,13 @@
 package com.hospital.controller;
 
+import com.hospital.dto.PaymentRequest;
+import com.hospital.dto.PaymentResponse;
 import com.hospital.dto.PrescriptionResponse;
+import com.hospital.dto.ReceiptResponse;
 import com.hospital.security.CustomUserDetails;
+import com.hospital.service.PaymentService;
 import com.hospital.service.PharmacyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +22,7 @@ import java.util.List;
 public class PharmacyController {
 
     private final PharmacyService pharmacyService;
+    private final PaymentService paymentService;
 
     @PostMapping("/dispense/{prescriptionId}")
     @PreAuthorize("hasRole('PHARMACIST')")
@@ -36,5 +42,30 @@ public class PharmacyController {
 
         return ResponseEntity.ok(pharmacyService.getPendingPrescriptions());
 
+    }
+
+
+    @PostMapping("/payment/{prescriptionId}")
+    public ResponseEntity<PaymentResponse> pharmacyPayment(
+            @PathVariable Long prescriptionId,
+            @Valid @RequestBody PaymentRequest request) {
+
+        return ResponseEntity.ok(
+                paymentService.pharmacyPayment(
+                        prescriptionId,
+                        request
+                )
+        );
+    }
+
+    @GetMapping("/receipt/{prescriptionId}")
+    public ResponseEntity<ReceiptResponse> pharmacyReceipt(
+            @PathVariable Long prescriptionId) {
+
+        return ResponseEntity.ok(
+                paymentService.getPharmacyReceipt(
+                        prescriptionId
+                )
+        );
     }
 }

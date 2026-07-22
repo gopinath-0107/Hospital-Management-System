@@ -1,10 +1,10 @@
 package com.hospital.controller;
 
 
-import com.hospital.dto.CreateLabTechnicianRequest;
-import com.hospital.dto.LabTechnicianResponse;
+import com.hospital.dto.*;
 import com.hospital.service.LabTechnicianService;
 
+import com.hospital.service.PaymentService;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,7 @@ public class LabTechnicianController {
 
     private final LabTechnicianService labTechnicianService;
 
+    private final PaymentService paymentService;
 
 
 
@@ -109,4 +110,29 @@ public class LabTechnicianController {
                 "Lab Technician deleted successfully"
         );
     }
+
+    @PostMapping("/payment/{labOrderId}")
+    public ResponseEntity<PaymentResponse> laboratoryPayment(
+            @PathVariable Long labOrderId,
+            @Valid @RequestBody PaymentRequest request) {
+
+        return ResponseEntity.ok(
+                paymentService.laboratoryPayment(
+                        labOrderId,
+                        request
+                )
+        );
+    }
+
+    @GetMapping("/receipt/{labOrderId}")
+    public ResponseEntity<ReceiptResponse> laboratoryReceipt(
+            @PathVariable Long labOrderId) {
+
+        return ResponseEntity.ok(
+                paymentService.getLaboratoryReceipt(
+                        labOrderId
+                )
+        );
+    }
+
 }

@@ -1,16 +1,8 @@
 package com.hospital.security;
 
-import com.hospital.entity.Admin;
-import com.hospital.entity.Doctor;
-import com.hospital.entity.Patient;
-import com.hospital.entity.Nurse;
-import com.hospital.entity.Receptionist;
+import com.hospital.entity.*;
 import com.hospital.enums.Role;
-import com.hospital.repo.AdminRepository;
-import com.hospital.repo.DoctorRepository;
-import com.hospital.repo.PatientRepository;
-import com.hospital.repo.NurseRepository;
-import com.hospital.repo.ReceptionistRepository;
+import com.hospital.repo.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,8 +10,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import com.hospital.entity.Pharmacist;
-import com.hospital.repo.PharmacistRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +21,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final NurseRepository nurseRepository;
     private final ReceptionistRepository receptionistRepository;
     private final PharmacistRepository pharmacistRepository;
+
+    private final LabTechnicianRepository labTechnicianRepository;
 
 
     @Override
@@ -60,6 +52,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
 
+        Optional<LabTechnician> labTechnician = labTechnicianRepository.findByEmail(email);
+        if (labTechnician.isPresent()) {
+            LabTechnician n = labTechnician.get();
+            return new CustomUserDetails(n.getEmail(), n.getPassword(), Role.LAB_TECHNICIAN.name(), n.getId(), n.getFirstName() + " " + n.getLastName());
+        }
+
+
         Optional<Pharmacist> pharmacist = pharmacistRepository.findByEmail(email);
 
 
@@ -78,6 +77,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 
 
+        }
+
+
+        Optional <Receptionist> receptionist = receptionistRepository.findByEmail(email);
+
+        if (receptionist.isPresent()) {
+            Receptionist n = receptionist.get();
+            return new CustomUserDetails(n.getEmail(), n.getPassword(), Role.RECEPTIONIST.name(), n.getId(), n.getFirstName() + " " + n.getLastName());
         }
 
 

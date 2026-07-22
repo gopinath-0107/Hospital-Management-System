@@ -34,9 +34,6 @@ public class LabTechnicianResponse {
 
     private String certificateNumber;
 
-    private Long departmentId;
-
-    private String departmentName;
 
     private Shift shift;
 

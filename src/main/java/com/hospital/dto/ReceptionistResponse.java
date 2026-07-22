@@ -27,9 +27,6 @@ public class ReceptionistResponse {
 
     private Gender gender;
 
-    private Long departmentId;
-
-    private String departmentName;
 
     private Shift shift;
 
