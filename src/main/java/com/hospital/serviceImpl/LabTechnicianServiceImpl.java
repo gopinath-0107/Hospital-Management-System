@@ -96,10 +96,6 @@ public class LabTechnicianServiceImpl implements LabTechnicianService {
         technician.setCertificateNumber(request.getCertificateNumber());
         technician.setShift(request.getShift());
 
-        // Update password if provided
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            technician.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
 
         LabTechnician updatedTechnician = labTechnicianRepository.save(technician);
 

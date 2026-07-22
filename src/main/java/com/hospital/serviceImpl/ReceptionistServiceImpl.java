@@ -91,9 +91,6 @@ public class ReceptionistServiceImpl implements ReceptionistService {
         receptionist.setShift(request.getShift());
 
 
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            receptionist.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
 
         Receptionist updatedReceptionist = receptionistRepository.save(receptionist);
 

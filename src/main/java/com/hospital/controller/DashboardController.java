@@ -67,4 +67,24 @@ public class DashboardController {
         );
     }
 
+
+    @GetMapping("/patient/{patientId}")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<PatientDashboardResponse> patientDashboard(
+            @PathVariable Long patientId){
+
+        return ResponseEntity.ok(
+                dashboardService.getPatientDashboard(patientId)
+        );
+    }
+
+
+    @GetMapping("/receptionist")
+    @PreAuthorize("hasRole('RECEPTIONIST')")
+    public ResponseEntity<ReceptionistDashboardResponse> receptionistDashboard(){
+
+        return ResponseEntity.ok(
+                dashboardService.getReceptionistDashboard()
+        );
+    }
 }

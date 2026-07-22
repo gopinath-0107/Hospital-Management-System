@@ -4,6 +4,8 @@ import com.hospital.dto.AppointmentRequest;
 import com.hospital.dto.AppointmentResponse;
 import com.hospital.enums.AppointmentStatus;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AppointmentService {
@@ -13,7 +15,10 @@ public interface AppointmentService {
     AppointmentResponse updateAppointmentStatus(Long appointmentId,
                                                 AppointmentStatus status);
 
-
+    List<LocalDateTime> getAvailableSlots(
+            Long doctorId,
+            LocalDate date
+    );
 
     AppointmentResponse approveAppointment(Long appointmentId);
 

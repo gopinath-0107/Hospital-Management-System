@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -137,6 +139,21 @@ public class AppointmentController {
 
         return ResponseEntity.ok(
                 appointmentService.getCompletedAppointmentsByDoctor(doctorId)
+        );
+    }
+
+    @PreAuthorize("hasRole('PATIENT')")
+    @GetMapping("/available-slots")
+    public ResponseEntity<List<LocalDateTime>> getAvailableSlots(
+            @RequestParam Long doctorId,
+            @RequestParam LocalDate date
+    ){
+
+        return ResponseEntity.ok(
+                appointmentService.getAvailableSlots(
+                        doctorId,
+                        date
+                )
         );
     }
 }

@@ -14,5 +14,6 @@ public interface LabReportRepository extends JpaRepository<LabReport, Long> {
 
     boolean existsByLabOrderId(Long labOrderId);
 
+    long countByLabOrderAppointmentPatientId(Long patientId);
     long countByStatus(LabReportStatus status);
 }

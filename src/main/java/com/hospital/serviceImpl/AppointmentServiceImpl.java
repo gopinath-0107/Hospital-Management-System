@@ -17,9 +17,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 @Service
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
@@ -32,14 +35,105 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponse bookAppointment(AppointmentRequest request) {
+
         Patient patient = patientRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with ID: " + request.getPatientId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Patient not found with ID: " + request.getPatientId()
+                        ));
 
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor not found with ID: " + request.getDoctorId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Doctor not found with ID: " + request.getDoctorId()
+                        ));
 
         Department department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found with ID: " + request.getDepartmentId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Department not found with ID: " + request.getDepartmentId()
+                        ));
+
+
+        /*
+         * Hospital Timing Validation
+         * 10 AM - 8 PM
+         */
+
+        LocalDateTime appointmentDate = request.getAppointmentDate();
+
+        LocalTime appointmentTime = appointmentDate.toLocalTime();
+
+
+        LocalTime openingTime = LocalTime.of(10, 0);
+        LocalTime closingTime = LocalTime.of(20, 0);
+
+
+        if (appointmentTime.isBefore(openingTime)
+                || !appointmentTime.isBefore(closingTime)) {
+
+            throw new RuntimeException(
+                    "Hospital timing is between 10 AM to 8 PM"
+            );
+        }
+
+
+        /*
+         * Break Time Validation
+         * 2 PM - 3 PM
+         */
+
+        LocalTime breakStart = LocalTime.of(14, 0);
+        LocalTime breakEnd = LocalTime.of(15, 0);
+
+
+        if (!appointmentTime.isBefore(breakStart)
+                && appointmentTime.isBefore(breakEnd)) {
+
+            throw new RuntimeException(
+                    "Hospital break time is between 2 PM to 3 PM"
+            );
+        }
+
+
+
+        /*
+         * 20 Minutes Slot Validation
+         */
+
+        int minute = appointmentTime.getMinute();
+
+
+        if (minute != 0 && minute != 20 && minute != 40) {
+
+            throw new RuntimeException(
+                    "Appointment should be booked only on 20 minute slots"
+            );
+        }
+
+
+
+        /*
+         * Duplicate Slot Check
+         * Same Doctor + Same Date + Same Time
+         */
+
+        boolean alreadyBooked =
+                appointmentRepository
+                        .existsByDoctorIdAndAppointmentDate(
+                                doctor.getId(),
+                                appointmentDate
+                        );
+
+
+        if (alreadyBooked) {
+
+            throw new RuntimeException(
+                    "This appointment slot is already booked"
+            );
+        }
+
+
 
         Appointment appointment = Appointment.builder()
                 .patient(patient)
@@ -50,10 +144,11 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .status(AppointmentStatus.PENDING)
                 .build();
 
+
         Appointment saved = appointmentRepository.save(appointment);
+
         return mapToResponse(saved);
     }
-
     @Override
     @Transactional
     public AppointmentResponse updateAppointmentStatus(Long appointmentId, AppointmentStatus status) {
@@ -260,5 +355,68 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocalDateTime> getAvailableSlots(
+            Long doctorId,
+            LocalDate date
+    ) {
+
+
+        List<LocalDateTime> availableSlots = new ArrayList<>();
+
+
+        // Hospital timing
+        LocalTime startTime = LocalTime.of(10,0);
+        LocalTime endTime = LocalTime.of(20,0);
+
+
+        while(startTime.isBefore(endTime)){
+
+
+            // Skip break 2 PM - 3 PM
+
+            if(startTime.isBefore(LocalTime.of(14,0))
+                    || !startTime.isBefore(LocalTime.of(15,0))) {
+
+
+                availableSlots.add(
+                        LocalDateTime.of(date,startTime)
+                );
+            }
+
+
+            // next 20 minutes slot
+
+            startTime = startTime.plusMinutes(20);
+        }
+
+
+
+        // Database मधून booked appointments घेणे
+
+        List<Appointment> bookedAppointments =
+                appointmentRepository
+                        .findByDoctorIdAndAppointmentDateBetween(
+                                doctorId,
+                                date.atStartOfDay(),
+                                date.atTime(23,59)
+                        );
+
+
+
+        // Booked time remove करणे
+
+        for(Appointment appointment : bookedAppointments){
+
+            availableSlots.remove(
+                    appointment.getAppointmentDate()
+            );
+        }
+
+
+        return availableSlots;
     }
 }

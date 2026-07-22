@@ -1,9 +1,6 @@
 package com.hospital.service;
 
-import com.hospital.dto.AdminDashboardResponse;
-import com.hospital.dto.DoctorDashboardResponse;
-import com.hospital.dto.LabDashboardResponse;
-import com.hospital.dto.PharmacyDashboardResponse;
+import com.hospital.dto.*;
 
 public interface DashboardService {
 
@@ -15,6 +12,8 @@ public interface DashboardService {
 
     LabDashboardResponse getLabDashboard();
 
+    PatientDashboardResponse getPatientDashboard(Long patientId);
 
+    ReceptionistDashboardResponse getReceptionistDashboard();
 
 }

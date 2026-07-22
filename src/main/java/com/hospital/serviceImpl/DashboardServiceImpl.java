@@ -1,10 +1,8 @@
 package com.hospital.serviceImpl;
 
-import com.hospital.dto.AdminDashboardResponse;
-import com.hospital.dto.DoctorDashboardResponse;
-import com.hospital.dto.LabDashboardResponse;
-import com.hospital.dto.PharmacyDashboardResponse;
+import com.hospital.dto.*;
 import com.hospital.entity.Payment;
+import com.hospital.enums.AppointmentStatus;
 import com.hospital.enums.LabOrderStatus;
 import com.hospital.enums.LabReportStatus;
 import com.hospital.enums.PaymentStatus;
@@ -221,6 +219,136 @@ public class DashboardServiceImpl implements DashboardService {
                 .totalReports(
                         totalReports
                 )
+
+                .build();
+    }
+
+
+    @Override
+    public PatientDashboardResponse getPatientDashboard(Long patientId) {
+
+
+        long totalAppointments =
+                appointmentRepository.countByPatientId(patientId);
+
+
+        long upcomingAppointments =
+                appointmentRepository.countByPatientIdAndStatus(
+                        patientId,
+                        AppointmentStatus.APPROVED
+                );
+
+
+        long completedAppointments =
+                appointmentRepository.countByPatientIdAndStatus(
+                        patientId,
+                        AppointmentStatus.COMPLETED
+                );
+
+
+        long cancelledAppointments =
+                appointmentRepository.countByPatientIdAndStatus(
+                        patientId,
+                        AppointmentStatus.REJECTED
+                );
+
+
+        long totalPrescriptions =
+                prescriptionRepository
+                        .countByAppointmentPatientId(patientId);
+
+
+        long totalLabTests =
+                labOrderRepository
+                        .countByAppointmentPatientId(patientId);
+
+
+        long totalLabReports =
+                labReportRepository
+                        .countByLabOrderAppointmentPatientId(patientId);
+
+
+        long totalBills =
+                paymentRepository
+                        .countByAppointmentPatientId(patientId);
+
+
+        long paidBills =
+                paymentRepository
+                        .countByAppointmentPatientIdAndPaymentStatus(
+                                patientId,
+                                PaymentStatus.PAID
+                        );
+
+
+        return PatientDashboardResponse.builder()
+
+                .totalAppointments(totalAppointments)
+
+                .upcomingAppointments(upcomingAppointments)
+
+                .completedAppointments(completedAppointments)
+
+                .cancelledAppointments(cancelledAppointments)
+
+                .totalPrescriptions(totalPrescriptions)
+
+                .totalLabTests(totalLabTests)
+
+                .totalLabReports(totalLabReports)
+
+                .totalBills(totalBills)
+
+                .paidBills(paidBills)
+
+                .build();
+    }
+
+
+    @Override
+    public ReceptionistDashboardResponse getReceptionistDashboard(){
+
+
+        return ReceptionistDashboardResponse.builder()
+
+
+                .totalPatients(
+                        patientRepository.count()
+                )
+
+
+                .totalAppointments(
+                        appointmentRepository.count()
+                )
+
+
+                .pendingAppointments(
+                        appointmentRepository.countByStatus(
+                                AppointmentStatus.PENDING
+                        )
+                )
+
+
+                .approvedAppointments(
+                        appointmentRepository.countByStatus(
+                                AppointmentStatus.APPROVED
+                        )
+                )
+
+
+                .completedAppointments(
+                        appointmentRepository.countByStatus(
+                                AppointmentStatus.COMPLETED
+                        )
+                )
+
+
+                .cancelledAppointments(
+                        appointmentRepository.countByStatus(
+                                AppointmentStatus.REJECTED
+                        )
+                )
+
 
                 .build();
     }
