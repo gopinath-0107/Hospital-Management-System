@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "departments")
@@ -33,6 +34,13 @@ public class Department {
     @Column(nullable = false)
     @Builder.Default
     private com.hospital.enums.Status status = com.hospital.enums.Status.ACTIVE;
+
+    @OneToMany(
+            mappedBy = "department",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<Specialization> specializations;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

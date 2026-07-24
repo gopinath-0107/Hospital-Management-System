@@ -5,6 +5,7 @@ import com.hospital.entity.Doctor;
 import com.hospital.enums.Status;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.DoctorRepository;
+import com.hospital.repo.SpecializationRepository;
 import com.hospital.service.DoctorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class DoctorServiceImpl implements DoctorService {
 
     private final DoctorRepository doctorRepository;
+    private final SpecializationRepository specializationRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -45,7 +47,8 @@ public class DoctorServiceImpl implements DoctorService {
                 .departmentName(d.getDepartment().getDepartmentName())
                 .qualification(d.getQualification())
                 .experience(d.getExperience())
-                .specialization(d.getSpecialization())
+                .specializationId(d.getSpecialization().getId())
+                .specializationName(d.getSpecialization().getSpecializationName())
                 .consultationFee(d.getConsultationFee())
                 .available(d.getAvailable())
                 .profileImage(d.getProfileImage())

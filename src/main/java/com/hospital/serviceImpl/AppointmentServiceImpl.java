@@ -8,10 +8,7 @@ import com.hospital.entity.Doctor;
 import com.hospital.entity.Patient;
 import com.hospital.enums.AppointmentStatus;
 import com.hospital.exception.ResourceNotFoundException;
-import com.hospital.repo.AppointmentRepository;
-import com.hospital.repo.DepartmentRepository;
-import com.hospital.repo.DoctorRepository;
-import com.hospital.repo.PatientRepository;
+import com.hospital.repo.*;
 import com.hospital.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import com.hospital.entity.DoctorAvailability;
+import com.hospital.enums.AvailabilityStatus;
 @Service
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
@@ -31,6 +30,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
+    private final DoctorAvailabilityRepository doctorAvailabilityRepository;
 
     @Override
     @Transactional
@@ -56,6 +56,31 @@ public class AppointmentServiceImpl implements AppointmentService {
 
 
         /*
+         * Doctor Availability Check
+         */
+
+        DoctorAvailability availability =
+                doctorAvailabilityRepository
+                        .findByDoctorIdAndAvailableDate(
+                                doctor.getId(),
+                                request.getAppointmentDate().toLocalDate()
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Doctor is not available on selected date."
+                                ));
+
+        if (availability.getStatus() != AvailabilityStatus.AVAILABLE) {
+
+            throw new RuntimeException(
+                    "Doctor is "
+                            + availability.getStatus()
+                            + " on selected date."
+            );
+        }
+
+
+        /*
          * Hospital Timing Validation
          * 10 AM - 8 PM
          */
@@ -65,15 +90,15 @@ public class AppointmentServiceImpl implements AppointmentService {
         LocalTime appointmentTime = appointmentDate.toLocalTime();
 
 
-        LocalTime openingTime = LocalTime.of(10, 0);
-        LocalTime closingTime = LocalTime.of(20, 0);
+        LocalTime openingTime = availability.getStartTime();
+        LocalTime closingTime = availability.getEndTime();
 
 
         if (appointmentTime.isBefore(openingTime)
                 || !appointmentTime.isBefore(closingTime)) {
 
             throw new RuntimeException(
-                    "Hospital timing is between 10 AM to 8 PM"
+                    "Appointment time is outside doctor's available timing."
             );
         }
 
@@ -112,6 +137,50 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
 
+        boolean pendingAppointment =
+                appointmentRepository.existsByPatientIdAndStatus(
+                        patient.getId(),
+                        AppointmentStatus.PENDING
+                );
+
+        if (pendingAppointment) {
+
+            throw new RuntimeException(
+                    "You already have a pending appointment."
+            );
+        }
+
+        LocalDate appointmentDay = appointmentDate.toLocalDate();
+
+        boolean patientAlreadyBooked =
+                appointmentRepository
+                        .existsByPatientIdAndAppointmentDateBetween(
+                                patient.getId(),
+                                appointmentDay.atStartOfDay(),
+                                appointmentDay.atTime(23,59,59)
+                        );
+
+        if(patientAlreadyBooked){
+
+            throw new RuntimeException(
+                    "Patient already has an appointment on this date."
+            );
+        }
+
+        long doctorAppointmentCount =
+                appointmentRepository
+                        .countByDoctorIdAndAppointmentDateBetween(
+                                doctor.getId(),
+                                appointmentDay.atStartOfDay(),
+                                appointmentDay.atTime(23, 59, 59)
+                        );
+
+        if (doctorAppointmentCount >= 27) {
+
+            throw new RuntimeException(
+                    "Doctor appointment limit reached for today."
+            );
+        }
 
         /*
          * Duplicate Slot Check
@@ -364,58 +433,57 @@ public class AppointmentServiceImpl implements AppointmentService {
             LocalDate date
     ) {
 
-
         List<LocalDateTime> availableSlots = new ArrayList<>();
 
+        // Check Doctor Availability
+        DoctorAvailability availability =
+                doctorAvailabilityRepository
+                        .findByDoctorIdAndAvailableDate(
+                                doctorId,
+                                date
+                        )
+                        .orElse(null);
 
-        // Hospital timing
-        LocalTime startTime = LocalTime.of(10,0);
-        LocalTime endTime = LocalTime.of(20,0);
+        if (availability == null) {
+            return availableSlots;
+        }
 
+        if (availability.getStatus() != AvailabilityStatus.AVAILABLE) {
+            return availableSlots;
+        }
 
-        while(startTime.isBefore(endTime)){
+        // Doctor working timing
+        LocalTime startTime = availability.getStartTime();
+        LocalTime endTime = availability.getEndTime();
 
+        while (startTime.isBefore(endTime)) {
 
-            // Skip break 2 PM - 3 PM
-
-            if(startTime.isBefore(LocalTime.of(14,0))
-                    || !startTime.isBefore(LocalTime.of(15,0))) {
-
+            // Skip Lunch Break (2 PM - 3 PM)
+            if (startTime.isBefore(LocalTime.of(14, 0))
+                    || !startTime.isBefore(LocalTime.of(15, 0))) {
 
                 availableSlots.add(
-                        LocalDateTime.of(date,startTime)
+                        LocalDateTime.of(date, startTime)
                 );
             }
-
-
-            // next 20 minutes slot
 
             startTime = startTime.plusMinutes(20);
         }
 
-
-
-        // Database मधून booked appointments घेणे
-
+        // Already booked appointments
         List<Appointment> bookedAppointments =
-                appointmentRepository
-                        .findByDoctorIdAndAppointmentDateBetween(
-                                doctorId,
-                                date.atStartOfDay(),
-                                date.atTime(23,59)
-                        );
+                appointmentRepository.findByDoctorIdAndAppointmentDateBetween(
+                        doctorId,
+                        date.atStartOfDay(),
+                        date.atTime(23, 59, 59)
+                );
 
-
-
-        // Booked time remove करणे
-
-        for(Appointment appointment : bookedAppointments){
-
+        // Remove booked slots
+        for (Appointment appointment : bookedAppointments) {
             availableSlots.remove(
                     appointment.getAppointmentDate()
             );
         }
-
 
         return availableSlots;
     }

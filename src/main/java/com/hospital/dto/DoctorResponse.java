@@ -20,11 +20,13 @@ public class DoctorResponse {
     private String lastName;
     private String email;
     private String mobile;
+    private Long departmentId;
     private String departmentName;
     private String qualification;
     private Gender gender;
     private Integer experience;
-    private String specialization;
+    private Long specializationId;
+    private String specializationName;
     private BigDecimal consultationFee;
     private Boolean available;
     private String profileImage;

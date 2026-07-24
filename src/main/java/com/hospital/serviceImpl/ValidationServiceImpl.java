@@ -15,6 +15,8 @@ public class ValidationServiceImpl implements ValidationService {
     private final PatientRepository patientRepository;
     private final NurseRepository nurseRepository;
     private final ReceptionistRepository receptionistRepository;
+    private final PharmacistRepository pharmacistRepository;
+    private final LabTechnicianRepository labTechnicianRepository;
 
     @Override
     public void validateEmailAndMobile(String email, String mobile) {
@@ -24,16 +26,23 @@ public class ValidationServiceImpl implements ValidationService {
                 || doctorRepository.existsByEmail(email)
                 || patientRepository.existsByEmail(email)
                 || nurseRepository.existsByEmail(email)
-                || receptionistRepository.existsByEmail(email)) {
+                || receptionistRepository.existsByEmail(email)
+                || pharmacistRepository.existsByEmail(email)
+                || labTechnicianRepository.existsByEmail(email))
+        {
 
             throw new DuplicateResourceException("Email already exists");
         }
 
         // Mobile Validation
-        if (doctorRepository.existsByMobile(mobile)
+        if (
+                doctorRepository.existsByMobile(mobile)
                 || patientRepository.existsByMobile(mobile)
                 || nurseRepository.existsByMobile(mobile)
-                || receptionistRepository.existsByMobile(mobile)) {
+                || receptionistRepository.existsByMobile(mobile)
+                || pharmacistRepository.existsByMobile(mobile)
+                || labTechnicianRepository.existsByMobile(mobile))
+         {
 
             throw new DuplicateResourceException("Mobile number already exists");
         }

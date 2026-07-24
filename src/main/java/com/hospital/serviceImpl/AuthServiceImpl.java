@@ -40,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final ValidationService validationService;
     private final PharmacistRepository pharmacistRepository;
+    private final SpecializationRepository specializationRepository;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -94,7 +95,13 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Department department = departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Department not found"));
+
+        Specialization specialization = specializationRepository
+                .findById(request.getSpecializationId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Specialization not found"));
 
         Doctor doctor = Doctor.builder()
                 .firstName(request.getFirstName())
@@ -104,14 +111,14 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .gender(request.getGender())
                 .department(department)
+                .specialization(specialization)
                 .qualification(request.getQualification())
                 .experience(request.getExperience())
-                .specialization(request.getSpecialization())
                 .consultationFee(request.getConsultationFee())
                 .licenseNumber(request.getLicenseNumber())
                 .role(Role.DOCTOR)
                 .available(true)
-                .status(com.hospital.enums.Status.ACTIVE)
+                .status(Status.ACTIVE)
                 .build();
 
         Doctor savedDoctor = doctorRepository.save(doctor);
@@ -123,11 +130,16 @@ public class AuthServiceImpl implements AuthService {
                 .email(savedDoctor.getEmail())
                 .mobile(savedDoctor.getMobile())
                 .gender(savedDoctor.getGender())
-                .specialization(savedDoctor.getSpecialization())
+
+                .departmentId(savedDoctor.getDepartment().getId())
+                .departmentName(savedDoctor.getDepartment().getDepartmentName())
+
+                .specializationId(savedDoctor.getSpecialization().getId())
+                .specializationName(savedDoctor.getSpecialization().getSpecializationName())
+
                 .qualification(savedDoctor.getQualification())
                 .experience(savedDoctor.getExperience())
                 .consultationFee(savedDoctor.getConsultationFee())
-                .departmentName(savedDoctor.getDepartment().getDepartmentName())
                 .licenseNumber(savedDoctor.getLicenseNumber())
                 .role(savedDoctor.getRole())
                 .available(savedDoctor.getAvailable())
@@ -140,7 +152,6 @@ public class AuthServiceImpl implements AuthService {
                 .data(response)
                 .build();
     }
-
     @Override
     public ApiResponse<PatientResponse> registerPatient(PatientRegistrationRequest request) {
 

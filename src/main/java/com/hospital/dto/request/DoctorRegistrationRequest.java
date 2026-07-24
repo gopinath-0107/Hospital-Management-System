@@ -66,10 +66,9 @@ public class DoctorRegistrationRequest {
             message = "Experience cannot be greater than 60 years")
     private Integer experience;
 
-    @NotBlank(message = "Specialization is required")
-    @Size(min = 2, max = 100,
-            message = "Specialization must be between 2 and 100 characters")
-    private String specialization;
+    @NotNull(message = "Specialization ID is required")
+    @Positive(message = "Specialization ID must be greater than 0")
+    private Long specializationId;
 
     @NotNull(message = "Consultation fee is required")
     @DecimalMin(

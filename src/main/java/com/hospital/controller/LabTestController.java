@@ -20,7 +20,7 @@ public class LabTestController {
     private final LabTestService labTestService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('LAB_TECHNICIAN')")
     public ResponseEntity<LabTestResponse> createLabTest(@Valid @RequestBody CreateLabTestRequest request) {
         return new ResponseEntity<>(labTestService.createLabTest(request), HttpStatus.CREATED);
     }

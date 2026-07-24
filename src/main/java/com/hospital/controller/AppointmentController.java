@@ -26,7 +26,7 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @PostMapping
-    @PreAuthorize("hasRole('PATIENT')")
+    @PreAuthorize("hasAnyRole('PATIENT','RECEPTIONIST')")
     @Operation(summary = "Book an Appointment for a Patient ")
     public ResponseEntity<AppointmentResponse> bookAppointment(@Valid @RequestBody AppointmentRequest request) {
         AppointmentResponse response = appointmentService.bookAppointment(request);
@@ -69,7 +69,7 @@ public class AppointmentController {
 
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasRole('RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST','DOCTOR')")
     public ResponseEntity<AppointmentResponse> approveAppointment(@PathVariable Long id) {
 
         return ResponseEntity.ok(
@@ -79,7 +79,7 @@ public class AppointmentController {
 
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasRole('RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST','DOCTOR')")
     public ResponseEntity<AppointmentResponse> rejectAppointment(@PathVariable Long id) {
 
         return ResponseEntity.ok(
