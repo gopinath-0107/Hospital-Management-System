@@ -21,6 +21,9 @@ public class LabReport {
     private Long id;
 
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lab_technician_id")
+    private LabTechnician labTechnician;
 
     @OneToOne
     @JoinColumn(name = "lab_order_id")

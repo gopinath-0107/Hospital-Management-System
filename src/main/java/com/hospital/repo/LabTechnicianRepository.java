@@ -17,6 +17,7 @@ public interface LabTechnicianRepository
     Optional<LabTechnician> findByEmail(String email);
 
 
+
     boolean existsByEmail(String email);
 
 

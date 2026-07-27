@@ -2,12 +2,19 @@ package com.hospital.serviceImpl;
 
 import com.hospital.dto.CreateLabOrderRequest;
 import com.hospital.dto.LabOrderResponse;
-import com.hospital.entity.*;
+import com.hospital.entity.Appointment;
+import com.hospital.entity.Consultation;
+import com.hospital.entity.LabOrder;
+import com.hospital.entity.LabTest;
 import com.hospital.enums.AppointmentStatus;
 import com.hospital.enums.LabOrderStatus;
-import com.hospital.enums.PrescriptionStatus;
+import com.hospital.exception.BadRequestException;
+import com.hospital.exception.DuplicateResourceException;
 import com.hospital.exception.ResourceNotFoundException;
-import com.hospital.repo.*;
+import com.hospital.repo.AppointmentRepository;
+import com.hospital.repo.ConsultationRepository;
+import com.hospital.repo.LabOrderRepository;
+import com.hospital.repo.LabTestRepository;
 import com.hospital.service.LabOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +31,6 @@ public class LabOrderServiceImpl implements LabOrderService {
     private final AppointmentRepository appointmentRepository;
     private final LabTestRepository labTestRepository;
     private final ConsultationRepository consultationRepository;
-    private final PrescriptionRepository prescriptionRepository;
 
     @Override
     @Transactional
@@ -33,66 +39,47 @@ public class LabOrderServiceImpl implements LabOrderService {
         Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Appointment not found with ID : " + request.getAppointmentId()));
+                                "Appointment not found with ID : " + request.getAppointmentId()
+                        ));
 
-        if (appointment.getStatus() != AppointmentStatus.APPROVED) {
-
-            throw new IllegalStateException(
-                    "Lab order can only be created for approved appointments."
+        // Consultation must be completed first
+        if (appointment.getStatus() != AppointmentStatus.CONSULTATION_DONE) {
+            throw new BadRequestException(
+                    "Lab order can only be created after consultation is completed."
             );
-
         }
 
-
-
-        Consultation consultation =
-                consultationRepository.findByAppointmentId(
-                        appointment.getId()
-                );
+        // Consultation must exist
+        Consultation consultation = consultationRepository
+                .findByAppointmentId(appointment.getId());
 
         if (consultation == null) {
-
-            throw new IllegalStateException(
-                    "Consultation must be completed before creating Lab Order."
+            throw new BadRequestException(
+                    "Consultation not found for this appointment."
             );
-
         }
 
-        Prescription prescription =
-                prescriptionRepository
-                        .findByAppointmentId(
-                                appointment.getId()
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Prescription not found"
-                                ));
-
-
-        if (prescription.getStatus() != PrescriptionStatus.ISSUED) {
-
-            throw new IllegalStateException(
-                    "Lab order can only be created after prescription is issued."
-            );
-
-        }
+        // Duplicate Lab Order Check
         if (labOrderRepository.existsByAppointmentIdAndLabTestId(
                 request.getAppointmentId(),
                 request.getLabTestId())) {
 
-            throw new RuntimeException(
-                    "Lab Order already ordered."
+            throw new DuplicateResourceException(
+                    "Lab Order already exists for this test."
             );
-
         }
 
+        // Lab Test
         LabTest labTest = labTestRepository.findById(request.getLabTestId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Lab Test not found with ID : " + request.getLabTestId()));
+                                "Lab Test not found with ID : " + request.getLabTestId()
+                        ));
 
         if (!labTest.getActive()) {
-            throw new IllegalStateException("Lab Test is inactive.");
+            throw new BadRequestException(
+                    "Selected Lab Test is inactive."
+            );
         }
 
         LabOrder labOrder = LabOrder.builder()
@@ -125,8 +112,7 @@ public class LabOrderServiceImpl implements LabOrderService {
     @Transactional(readOnly = true)
     public List<LabOrderResponse> getOrdersByAppointment(Long appointmentId) {
 
-        List<LabOrder> orders =
-                labOrderRepository.findByAppointmentId(appointmentId);
+        List<LabOrder> orders = labOrderRepository.findByAppointmentId(appointmentId);
 
         List<LabOrderResponse> response = new ArrayList<>();
 
@@ -209,15 +195,12 @@ public class LabOrderServiceImpl implements LabOrderService {
                 .appointmentId(labOrder.getAppointment().getId())
                 .labTestId(labOrder.getLabTest().getId())
                 .labTestName(labOrder.getLabTest().getTestName())
-
                 .clinicalNotes(labOrder.getClinicalNotes())
                 .priority(labOrder.getPriority())
                 .instructions(labOrder.getInstructions())
-
                 .status(labOrder.getStatus())
                 .createdAt(labOrder.getCreatedAt())
                 .updatedAt(labOrder.getUpdatedAt())
                 .build();
     }
-
 }

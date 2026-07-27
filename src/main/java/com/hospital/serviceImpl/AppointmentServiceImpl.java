@@ -7,6 +7,7 @@ import com.hospital.entity.Department;
 import com.hospital.entity.Doctor;
 import com.hospital.entity.Patient;
 import com.hospital.enums.AppointmentStatus;
+import com.hospital.exception.BadRequestException;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.*;
 import com.hospital.service.AppointmentService;
@@ -66,13 +67,13 @@ public class AppointmentServiceImpl implements AppointmentService {
                                 request.getAppointmentDate().toLocalDate()
                         )
                         .orElseThrow(() ->
-                                new RuntimeException(
+                                new BadRequestException(
                                         "Doctor is not available on selected date."
                                 ));
 
         if (availability.getStatus() != AvailabilityStatus.AVAILABLE) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Doctor is "
                             + availability.getStatus()
                             + " on selected date."
@@ -97,7 +98,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (appointmentTime.isBefore(openingTime)
                 || !appointmentTime.isBefore(closingTime)) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Appointment time is outside doctor's available timing."
             );
         }
@@ -115,7 +116,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (!appointmentTime.isBefore(breakStart)
                 && appointmentTime.isBefore(breakEnd)) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Hospital break time is between 2 PM to 3 PM"
             );
         }
@@ -131,7 +132,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (minute != 0 && minute != 20 && minute != 40) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Appointment should be booked only on 20 minute slots"
             );
         }
@@ -145,7 +146,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (pendingAppointment) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "You already have a pending appointment."
             );
         }
@@ -177,7 +178,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (doctorAppointmentCount >= 27) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Doctor appointment limit reached for today."
             );
         }
@@ -197,7 +198,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (alreadyBooked) {
 
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "This appointment slot is already booked"
             );
         }

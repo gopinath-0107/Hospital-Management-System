@@ -4,7 +4,10 @@ import com.hospital.dto.ConsultationResponse;
 import com.hospital.dto.CreateConsultationRequest;
 import com.hospital.entity.*;
 import com.hospital.enums.AppointmentStatus;
+import com.hospital.exception.BadRequestException;
+import com.hospital.exception.DuplicateResourceException;
 import com.hospital.exception.ResourceNotFoundException;
+import com.hospital.exception.UnauthorizedException;
 import com.hospital.repo.*;
 import com.hospital.service.ConsultationService;
 
@@ -74,14 +77,14 @@ public class ConsultationServiceImpl implements ConsultationService {
         if(consultationRepository.existsByAppointmentId(
                 request.getAppointmentId())){
 
-            throw new RuntimeException(
+            throw new DuplicateResourceException(
                     "Consultation already exists"
             );
         }
 
         if (appointment.getStatus() != AppointmentStatus.APPROVED) {
 
-            throw new IllegalStateException(
+            throw new BadRequestException(
                     "Consultation can only be created for APPROVED appointments."
             );
 
@@ -94,7 +97,7 @@ public class ConsultationServiceImpl implements ConsultationService {
                 .equals(doctor.getId())){
 
 
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "You are not allowed to consult this appointment"
             );
 

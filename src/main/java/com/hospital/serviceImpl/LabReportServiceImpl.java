@@ -4,6 +4,7 @@ package com.hospital.serviceImpl;
 import com.hospital.dto.*;
 import com.hospital.entity.LabOrder;
 import com.hospital.entity.LabReport;
+import com.hospital.entity.LabTechnician;
 import com.hospital.enums.LabReportStatus;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.*;
@@ -21,6 +22,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 
 
@@ -35,7 +41,7 @@ public class LabReportServiceImpl
 
     private final LabOrderRepository labOrderRepository;
 
-
+    private final LabTechnicianRepository labTechnicianRepository;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -48,6 +54,20 @@ public class LabReportServiceImpl
             UploadLabReportRequest request) {
 
 
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
+
+        LabTechnician technician =
+                labTechnicianRepository
+                        .findByEmail(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Lab Technician not found"
+                                ));
 
         LabOrder labOrder =
                 labOrderRepository.findById(
@@ -102,28 +122,17 @@ public class LabReportServiceImpl
 
 
 
-        LabReport report =
-                new LabReport();
-
-
+        LabReport report = new LabReport();
 
         report.setLabOrder(labOrder);
 
+        report.setLabTechnician(technician);
 
-        report.setReport(
-                request.getReport()
-        );
+        report.setReport(request.getReport());
 
+        report.setFilePath(uploadDir + fileName);
 
-        report.setFilePath(
-                uploadDir + fileName
-        );
-
-
-        report.setStatus(
-                LabReportStatus.UPLOADED
-        );
-
+        report.setStatus(LabReportStatus.UPLOADED);
 
         report.setCreatedAt(
                 LocalDateTime.now()
@@ -232,6 +241,52 @@ public class LabReportServiceImpl
 
         labReportRepository.save(report);
 
+    }
+
+
+    @Override
+    public List<LabReportResponse> getReportsByDoctor(Long doctorId) {
+
+        List<LabReport> reports =
+                labReportRepository.findByLabOrderAppointmentDoctorId(doctorId);
+
+        List<LabReportResponse> response = new ArrayList<>();
+
+        for (LabReport report : reports) {
+            response.add(map(report));
+        }
+
+        return response;
+    }
+
+    @Override
+    public List<LabReportResponse> getReportsByPatient(Long patientId) {
+
+        List<LabReport> reports =
+                labReportRepository.findByLabOrderAppointmentPatientId(patientId);
+
+        List<LabReportResponse> response = new ArrayList<>();
+
+        for (LabReport report : reports) {
+            response.add(map(report));
+        }
+
+        return response;
+    }
+
+    @Override
+    public List<LabReportResponse> getReportsByLabTechnician(Long labTechnicianId) {
+
+        List<LabReport> reports =
+                labReportRepository.findByLabTechnicianId(labTechnicianId);
+
+        List<LabReportResponse> response = new ArrayList<>();
+
+        for (LabReport report : reports) {
+            response.add(map(report));
+        }
+
+        return response;
     }
 
 }
