@@ -139,9 +139,11 @@ public class LabReportController {
         Resource resource = labReportService.downloadReport(id);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + resource.getFilename() + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"LabReport.pdf\""
+                )
                 .body(resource);
     }
 
