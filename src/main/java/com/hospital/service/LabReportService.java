@@ -3,6 +3,7 @@ package com.hospital.service;
 import com.hospital.dto.LabReportResponse;
 import com.hospital.dto.LabReportReviewRequest;
 import com.hospital.dto.UploadLabReportRequest;
+import org.springframework.core.io.Resource;
 
 import java.util.List;
 
@@ -36,4 +37,5 @@ public interface LabReportService {
             LabReportReviewRequest request
     );
 
+    Resource downloadReport(Long reportId);
 }

@@ -2,19 +2,16 @@ package com.hospital.serviceImpl;
 
 import com.hospital.dto.CreateLabOrderRequest;
 import com.hospital.dto.LabOrderResponse;
-import com.hospital.entity.Appointment;
-import com.hospital.entity.Consultation;
-import com.hospital.entity.LabOrder;
-import com.hospital.entity.LabTest;
+import com.hospital.entity.*;
 import com.hospital.enums.AppointmentStatus;
 import com.hospital.enums.LabOrderStatus;
+import com.hospital.enums.NotificationType;
+import com.hospital.enums.Role;
 import com.hospital.exception.BadRequestException;
 import com.hospital.exception.DuplicateResourceException;
 import com.hospital.exception.ResourceNotFoundException;
-import com.hospital.repo.AppointmentRepository;
-import com.hospital.repo.ConsultationRepository;
-import com.hospital.repo.LabOrderRepository;
-import com.hospital.repo.LabTestRepository;
+import com.hospital.repo.*;
+import com.hospital.service.HospitalNotificationService;
 import com.hospital.service.LabOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +28,8 @@ public class LabOrderServiceImpl implements LabOrderService {
     private final AppointmentRepository appointmentRepository;
     private final LabTestRepository labTestRepository;
     private final ConsultationRepository consultationRepository;
+    private final HospitalNotificationService hospitalNotificationService;
+    private final LabTechnicianRepository labTechnicianRepository;
 
     @Override
     @Transactional
@@ -92,6 +91,29 @@ public class LabOrderServiceImpl implements LabOrderService {
                 .build();
 
         LabOrder saved = labOrderRepository.save(labOrder);
+
+        // ==========================
+// Notification to Lab Technicians
+// ==========================
+
+        List<LabTechnician> technicians =
+                labTechnicianRepository.findAll();
+
+        for (LabTechnician technician : technicians) {
+
+            hospitalNotificationService.createNotification(
+                    technician.getId(),
+                    Role.LAB_TECHNICIAN,
+                    NotificationType.LAB_ORDER,
+                    "New Lab Order",
+                    "A new lab order has been assigned for "
+                            + appointment.getPatient().getFirstName()
+                            + " "
+                            + appointment.getPatient().getLastName()
+                            + ". Test : "
+                            + labTest.getTestName()
+            );
+        }
 
         return mapToResponse(saved);
     }

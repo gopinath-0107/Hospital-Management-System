@@ -6,11 +6,14 @@ import com.hospital.entity.LabOrder;
 import com.hospital.entity.LabReport;
 import com.hospital.entity.LabTechnician;
 import com.hospital.enums.LabReportStatus;
+import com.hospital.enums.NotificationType;
+import com.hospital.enums.Role;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.*;
+import com.hospital.service.HospitalNotificationService;
 import com.hospital.service.LabReportService;
-
-
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import lombok.RequiredArgsConstructor;
 
 
@@ -18,8 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-
+import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,13 +32,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 
 
+
 @Service
 @RequiredArgsConstructor
 public class LabReportServiceImpl
         implements LabReportService {
 
 
-
+    private final HospitalNotificationService hospitalNotificationService;
     private final LabReportRepository labReportRepository;
 
     private final LabOrderRepository labOrderRepository;
@@ -89,14 +92,8 @@ public class LabReportServiceImpl
                         +"_"+file.getOriginalFilename();
 
 
-
+        Path uploadPath = Paths.get(uploadDir);
         try {
-
-
-            Path uploadPath =
-                    Paths.get(uploadDir);
-
-
 
             if(!Files.exists(uploadPath)){
                 Files.createDirectories(uploadPath);
@@ -130,7 +127,9 @@ public class LabReportServiceImpl
 
         report.setReport(request.getReport());
 
-        report.setFilePath(uploadDir + fileName);
+        report.setFilePath(
+                uploadPath.resolve(fileName).toString()
+        );
 
         report.setStatus(LabReportStatus.UPLOADED);
 
@@ -149,6 +148,35 @@ public class LabReportServiceImpl
                 labReportRepository.save(report);
 
 
+        // =====================================
+// Notification to Doctor
+// =====================================
+
+        hospitalNotificationService.createNotification(
+                labOrder.getAppointment().getDoctor().getId(),
+                Role.DOCTOR,
+                NotificationType.LAB_REPORT,
+                "Lab Report Uploaded",
+                "Lab report for patient "
+                        + labOrder.getAppointment().getPatient().getFirstName()
+                        + " "
+                        + labOrder.getAppointment().getPatient().getLastName()
+                        + " has been uploaded."
+        );
+
+// =====================================
+// Notification to Patient
+// =====================================
+
+        hospitalNotificationService.createNotification(
+                labOrder.getAppointment().getPatient().getId(),
+                Role.PATIENT,
+                NotificationType.LAB_REPORT,
+                "Lab Report Ready",
+                "Your lab report for "
+                        + labOrder.getLabTest().getTestName()
+                        + " is ready."
+        );
 
         return map(saved);
 
@@ -214,10 +242,10 @@ public class LabReportServiceImpl
     }
 
     @Override
+    @Transactional
     public void reviewReport(
             Long reportId,
-            LabReportReviewRequest request){
-
+            LabReportReviewRequest request) {
 
         LabReport report =
                 labReportRepository.findById(reportId)
@@ -225,25 +253,47 @@ public class LabReportServiceImpl
                                 new ResourceNotFoundException(
                                         "Report not found"));
 
-
         report.setDoctorRemarks(
                 request.getDoctorRemarks()
         );
 
-
         report.setReviewed(true);
-
 
         report.setReviewedAt(
                 LocalDateTime.now()
         );
 
-
         labReportRepository.save(report);
 
+        // ==========================
+        // Notification to Patient
+        // ==========================
+
+        hospitalNotificationService.createNotification(
+                report.getLabOrder()
+                        .getAppointment()
+                        .getPatient()
+                        .getId(),
+                Role.PATIENT,
+                NotificationType.LAB_REPORT,
+                "Lab Report Reviewed",
+                "Your lab report for "
+                        + report.getLabOrder()
+                        .getLabTest()
+                        .getTestName()
+                        + " has been reviewed by Dr. "
+                        + report.getLabOrder()
+                        .getAppointment()
+                        .getDoctor()
+                        .getFirstName()
+                        + " "
+                        + report.getLabOrder()
+                        .getAppointment()
+                        .getDoctor()
+                        .getLastName()
+                        + "."
+        );
     }
-
-
     @Override
     public List<LabReportResponse> getReportsByDoctor(Long doctorId) {
 
@@ -287,6 +337,31 @@ public class LabReportServiceImpl
         }
 
         return response;
+    }
+
+
+    @Override
+    public Resource downloadReport(Long reportId) {
+
+        LabReport report = labReportRepository.findById(reportId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Lab Report not found"));
+
+        try {
+
+            Path path = Paths.get(report.getFilePath());
+
+            Resource resource = new UrlResource(path.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new RuntimeException("File not found");
+            }
+
+            return resource;
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Invalid file path");
+        }
     }
 
 }

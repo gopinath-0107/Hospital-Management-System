@@ -4,9 +4,12 @@ import com.hospital.dto.*;
 import com.hospital.dto.PrescriptionMedicineResponse;
 import com.hospital.entity.*;
 import com.hospital.enums.AppointmentStatus;
+import com.hospital.enums.NotificationType;
 import com.hospital.enums.PrescriptionStatus;
+import com.hospital.enums.Role;
 import com.hospital.exception.DuplicateResourceException;
 import com.hospital.repo.*;
+import com.hospital.service.HospitalNotificationService;
 import com.hospital.service.PrescriptionService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,18 +37,16 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
     private final ConsultationRepository consultationRepository;
 
-
+    private final HospitalNotificationService hospitalNotificationService;
 
     @Override
+    @Transactional
     public PrescriptionResponse createPrescription(PrescriptionRequest request) {
-
-
 
         Appointment appointment =
                 appointmentRepository.findById(request.getAppointmentId())
                         .orElseThrow(() ->
-                                new DuplicateResourceException("Appointment not found")
-                        );
+                                new DuplicateResourceException("Appointment not found"));
 
         if (appointment.getStatus() != AppointmentStatus.CONSULTATION_DONE) {
 
@@ -53,15 +54,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                     "Consultation not completed"
             );
         }
-
-        if (appointment.getStatus() != AppointmentStatus.CONSULTATION_DONE) {
-
-            throw new IllegalStateException(
-                    "Prescription can only be created for CONSULTATION_DONE appointments."
-            );
-
-        }
-
 
         Consultation consultation =
                 consultationRepository.findByAppointmentId(
@@ -73,7 +65,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             throw new IllegalStateException(
                     "Please complete consultation before creating prescription."
             );
-
         }
 
         boolean exists =
@@ -81,43 +72,26 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                         .findByAppointmentId(request.getAppointmentId())
                         .isPresent();
 
-
-        if(exists){
+        if (exists) {
 
             throw new DuplicateResourceException(
                     "Prescription already exists for this appointment"
             );
         }
 
-
-
         Prescription prescription =
                 Prescription.builder()
                         .appointment(appointment)
-                        .diagnosis(
-                                consultation.getDiagnosis()
-                        )
+                        .diagnosis(consultation.getDiagnosis())
                         .instructions(request.getInstructions())
                         .status(PrescriptionStatus.ISSUED)
                         .build();
 
-
-        if (prescription != null && !prescription.getMedicines().isEmpty()) {
-
-            if (prescription.getStatus() != PrescriptionStatus.DISPENSED) {
-                throw new RuntimeException("Medicines not dispensed");
-            }
-
-        }
-
         List<PrescriptionMedicine> medicines =
                 new ArrayList<>();
 
-
-
-        for(PrescriptionMedicineRequest medicineRequest :
-                request.getMedicines()){
-
+        for (PrescriptionMedicineRequest medicineRequest :
+                request.getMedicines()) {
 
             Medicine medicine =
                     medicineRepository
@@ -125,15 +99,11 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                             .orElseThrow(() ->
                                     new DuplicateResourceException(
                                             "Medicine not found"
-                                    )
-                            );
-
-
+                                    ));
 
             PrescriptionMedicine prescriptionMedicine =
                     PrescriptionMedicine.builder()
                             .prescription(prescription)
-
                             .medicine(medicine)
                             .dosage(medicineRequest.getDosage())
                             .quantity(medicineRequest.getQuantity())
@@ -141,29 +111,32 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                             .duration(medicineRequest.getDuration())
                             .build();
 
-
-
             medicines.add(prescriptionMedicine);
-
         }
 
-
-
         prescription.setMedicines(medicines);
-
-
 
         Prescription savedPrescription =
                 prescriptionRepository.save(prescription);
 
+        // =====================================
+        // Notification to Patient
+        // =====================================
 
+        hospitalNotificationService.createNotification(
+                appointment.getPatient().getId(),
+                Role.PATIENT,
+                NotificationType.PRESCRIPTION,
+                "Prescription Ready",
+                "Your prescription has been prepared by Dr. "
+                        + appointment.getDoctor().getFirstName()
+                        + " "
+                        + appointment.getDoctor().getLastName()
+                        + ". Please collect your medicines from the pharmacy."
+        );
 
         return mapToResponse(savedPrescription);
-
     }
-
-
-
     @Override
     public PrescriptionResponse getPrescriptionById(Long id) {
 

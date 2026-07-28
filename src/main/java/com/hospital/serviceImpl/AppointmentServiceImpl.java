@@ -2,15 +2,15 @@ package com.hospital.serviceImpl;
 
 import com.hospital.dto.AppointmentRequest;
 import com.hospital.dto.AppointmentResponse;
-import com.hospital.entity.Appointment;
-import com.hospital.entity.Department;
-import com.hospital.entity.Doctor;
-import com.hospital.entity.Patient;
+import com.hospital.entity.*;
 import com.hospital.enums.AppointmentStatus;
+import com.hospital.enums.NotificationType;
+import com.hospital.enums.Role;
 import com.hospital.exception.BadRequestException;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.*;
 import com.hospital.service.AppointmentService;
+import com.hospital.service.HospitalNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import com.hospital.entity.DoctorAvailability;
+
 import com.hospital.enums.AvailabilityStatus;
 @Service
 @RequiredArgsConstructor
@@ -32,6 +32,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final DoctorRepository doctorRepository;
     private final DepartmentRepository departmentRepository;
     private final DoctorAvailabilityRepository doctorAvailabilityRepository;
+    private final HospitalNotificationService hospitalNotificationService;
+    private final ReceptionistRepository receptionistRepository;
 
     @Override
     @Transactional
@@ -217,6 +219,26 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment saved = appointmentRepository.save(appointment);
 
+        // =========================
+        // Notification to Receptionists
+        // =========================
+
+        List<Receptionist> receptionists =
+                receptionistRepository.findAll();
+
+        for (Receptionist receptionist : receptionists) {
+
+            hospitalNotificationService.createNotification(
+                    receptionist.getId(),
+                    Role.RECEPTIONIST,
+                    NotificationType.APPOINTMENT,
+                    "New Appointment",
+                    "New appointment booked by "
+                            + patient.getFirstName() + " "
+                            + patient.getLastName()
+            );
+        }
+
         return mapToResponse(saved);
     }
     @Override
@@ -304,9 +326,37 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment saved = appointmentRepository.save(appointment);
 
+        // ===========================
+        // Notification to Patient
+        // ===========================
+
+        hospitalNotificationService.createNotification(
+                appointment.getPatient().getId(),
+                Role.PATIENT,
+                NotificationType.APPOINTMENT,
+                "Appointment Approved",
+                "Your appointment with Dr. "
+                        + appointment.getDoctor().getFirstName() + " "
+                        + appointment.getDoctor().getLastName()
+                        + " has been approved."
+        );
+
+        // ===========================
+        // Notification to Doctor
+        // ===========================
+
+        hospitalNotificationService.createNotification(
+                appointment.getDoctor().getId(),
+                Role.DOCTOR,
+                NotificationType.APPOINTMENT,
+                "New Patient Appointment",
+                "You have a new approved appointment with "
+                        + appointment.getPatient().getFirstName() + " "
+                        + appointment.getPatient().getLastName()
+        );
+
         return mapToResponse(saved);
     }
-
     @Override
     @Transactional
     public AppointmentResponse rejectAppointment(Long appointmentId) {

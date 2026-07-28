@@ -4,8 +4,13 @@ import com.hospital.dto.LabReportResponse;
 import com.hospital.dto.LabReportReviewRequest;
 import com.hospital.dto.UploadLabReportRequest;
 import com.hospital.service.LabReportService;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -123,6 +128,21 @@ public class LabReportController {
         return ResponseEntity.ok(
                 "Report reviewed successfully"
         );
+    }
+
+
+    @GetMapping("/{id}/download")
+    @PreAuthorize("hasAnyRole('DOCTOR','PATIENT','LAB_TECHNICIAN')")
+    public ResponseEntity<Resource> downloadReport(
+            @PathVariable Long id) {
+
+        Resource resource = labReportService.downloadReport(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 
 }

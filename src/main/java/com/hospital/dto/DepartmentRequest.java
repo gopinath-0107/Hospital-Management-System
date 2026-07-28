@@ -23,8 +23,8 @@ public class DepartmentRequest {
             message = "Department name must be between 2 and 100 characters"
     )
     @Pattern(
-            regexp = "^[A-Za-z ]+$",
-            message = "Department name must contain only letters and spaces"
+            regexp = "^[A-Za-z&()/\\- ]+$",
+            message = "Department name can contain only letters, spaces, &, /, -, (, )"
     )
     private String departmentName;
 

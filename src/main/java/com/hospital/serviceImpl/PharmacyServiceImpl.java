@@ -3,11 +3,10 @@ package com.hospital.serviceImpl;
 import com.hospital.dto.PrescriptionMedicineResponse;
 import com.hospital.dto.PrescriptionResponse;
 import com.hospital.entity.*;
-import com.hospital.enums.AppointmentStatus;
-import com.hospital.enums.DispenseStatus;
-import com.hospital.enums.PrescriptionStatus;
+import com.hospital.enums.*;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.*;
+import com.hospital.service.HospitalNotificationService;
 import com.hospital.service.PharmacyService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,7 @@ public class PharmacyServiceImpl implements PharmacyService {
     private final DispensedMedicineRepository dispensedMedicineRepository;
     private final PharmacistRepository pharmacistRepository;
     private final ConsultationRepository consultationRepository;
+    private final HospitalNotificationService hospitalNotificationService;
 
     @Override
     public void dispenseMedicine(Long prescriptionId, Long pharmacistId) {
@@ -190,6 +190,17 @@ public class PharmacyServiceImpl implements PharmacyService {
 
         prescriptionRepository.save(
                 prescription
+        );
+        // ==========================
+// Notification to Patient
+// ==========================
+
+        hospitalNotificationService.createNotification(
+                prescription.getAppointment().getPatient().getId(),
+                Role.PATIENT,
+                NotificationType.PHARMACY,
+                "Medicine Dispensed",
+                "Your prescribed medicines have been dispensed successfully by the pharmacy. Please collect your medicines."
         );
     }
 

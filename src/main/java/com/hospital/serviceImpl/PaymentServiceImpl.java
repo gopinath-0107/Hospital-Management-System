@@ -4,13 +4,16 @@ import com.hospital.dto.PaymentRequest;
 import com.hospital.dto.PaymentResponse;
 import com.hospital.dto.ReceiptResponse;
 import com.hospital.entity.*;
+import com.hospital.enums.NotificationType;
 import com.hospital.enums.PaymentStatus;
 import com.hospital.enums.PaymentType;
+import com.hospital.enums.Role;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.AppointmentRepository;
 import com.hospital.repo.LabOrderRepository;
 import com.hospital.repo.PaymentRepository;
 import com.hospital.repo.PrescriptionRepository;
+import com.hospital.service.HospitalNotificationService;
 import com.hospital.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final AppointmentRepository appointmentRepository;
     private final PrescriptionRepository prescriptionRepository;
     private final LabOrderRepository labOrderRepository;
+    private final HospitalNotificationService hospitalNotificationService;
 
     @Override
     public PaymentResponse consultationPayment(
@@ -59,6 +63,16 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         Payment savedPayment = paymentRepository.save(payment);
+
+        hospitalNotificationService.createNotification(
+                appointment.getPatient().getId(),
+                Role.PATIENT,
+                NotificationType.PAYMENT,
+                "Consultation Payment Successful",
+                "Your consultation payment of ₹"
+                        + payment.getAmount()
+                        + " has been received."
+        );
 
         return mapToPaymentResponse(savedPayment);
     }
@@ -137,6 +151,16 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
+        hospitalNotificationService.createNotification(
+                prescription.getAppointment().getPatient().getId(),
+                Role.PATIENT,
+                NotificationType.PAYMENT,
+                "Medicine Payment Successful",
+                "Medicine payment of ₹"
+                        + payment.getAmount()
+                        + " has been received."
+        );
+
         return mapToPaymentResponse(savedPayment);
     }
 
@@ -194,6 +218,16 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         Payment savedPayment = paymentRepository.save(payment);
+
+        hospitalNotificationService.createNotification(
+                labOrder.getAppointment().getPatient().getId(),
+                Role.PATIENT,
+                NotificationType.PAYMENT,
+                "Laboratory Payment Successful",
+                "Laboratory payment of ₹"
+                        + payment.getAmount()
+                        + " has been received."
+        );
 
         return mapToPaymentResponse(savedPayment);
     }
