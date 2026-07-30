@@ -9,13 +9,13 @@ import com.hospital.enums.PaymentStatus;
 import com.hospital.enums.PaymentType;
 import com.hospital.enums.Role;
 import com.hospital.exception.ResourceNotFoundException;
-import com.hospital.repo.AppointmentRepository;
-import com.hospital.repo.LabOrderRepository;
-import com.hospital.repo.PaymentRepository;
-import com.hospital.repo.PrescriptionRepository;
+import com.hospital.repo.*;
 import com.hospital.service.HospitalNotificationService;
 import com.hospital.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,6 +31,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PrescriptionRepository prescriptionRepository;
     private final LabOrderRepository labOrderRepository;
     private final HospitalNotificationService hospitalNotificationService;
+    private final PatientRepository patientRepository;
 
     @Override
     public PaymentResponse consultationPayment(
@@ -238,20 +239,68 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = paymentRepository.findByAppointmentId(appointmentId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Consultation receipt not found"));
+                        new ResourceNotFoundException("Consultation receipt not found"));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        boolean isPatient = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"));
+
+        if (isPatient) {
+
+            Patient loggedInPatient = patientRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Patient not found"));
+
+            if (!payment.getAppointment()
+                    .getPatient()
+                    .getId()
+                    .equals(loggedInPatient.getId())) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to view this receipt.");
+            }
+        }
 
         return mapToReceiptResponse(payment);
     }
-
 
     @Override
     public ReceiptResponse getPharmacyReceipt(Long prescriptionId) {
 
         Payment payment = paymentRepository.findByPrescriptionId(prescriptionId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Pharmacy receipt not found"));
+                        new ResourceNotFoundException("Pharmacy receipt not found"));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        boolean isPatient = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"));
+
+        if (isPatient) {
+
+            Patient loggedInPatient = patientRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Patient not found"));
+
+            if (!payment.getPrescription()
+                    .getAppointment()
+                    .getPatient()
+                    .getId()
+                    .equals(loggedInPatient.getId())) {
+
+                throw new AccessDeniedException(
+                        "You are not authorized to view this receipt.");
+            }
+        }
 
         return mapToReceiptResponse(payment);
     }
@@ -262,8 +311,33 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = paymentRepository.findByLabOrderId(labOrderId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Laboratory receipt not found"));
+                        new ResourceNotFoundException("Laboratory receipt not found"));
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        boolean isPatient = authentication.getAuthorities()
+                .stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"));
+
+        if (isPatient) {
+
+            Patient loggedInPatient = patientRepository.findByEmail(email)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Patient not found"));
+
+            if (!payment.getLabOrder()
+                    .getAppointment()
+                    .getPatient()
+                    .getId()
+                    .equals(loggedInPatient.getId())) {
+
+                throw new AccessDeniedException(
+                        "You are not authorized to view this receipt.");
+            }
+        }
 
         return mapToReceiptResponse(payment);
     }

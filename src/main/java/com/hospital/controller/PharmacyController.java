@@ -59,6 +59,7 @@ public class PharmacyController {
     }
 
     @GetMapping("/receipt/{prescriptionId}")
+    @PreAuthorize("hasAnyRole('PATIENT','ADMIN','RECEPTIONIST')")
     public ResponseEntity<ReceiptResponse> pharmacyReceipt(
             @PathVariable Long prescriptionId) {
 

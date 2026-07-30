@@ -2,9 +2,12 @@ package com.hospital.serviceImpl;
 
 import com.hospital.dto.NotificationRequest;
 import com.hospital.dto.NotificationResponse;
+import com.hospital.entity.Appointment;
 import com.hospital.entity.Notification;
 import com.hospital.entity.Patient;
+import com.hospital.enums.AppointmentStatus;
 import com.hospital.exception.ResourceNotFoundException;
+import com.hospital.repo.AppointmentRepository;
 import com.hospital.repo.NotificationRepository;
 import com.hospital.repo.PatientRepository;
 import com.hospital.service.NotificationService;
@@ -19,6 +22,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
 
     @Override
     public NotificationResponse createNotification(NotificationRequest request) {
@@ -32,6 +36,18 @@ public class NotificationServiceImpl implements NotificationService {
                 .title(request.getTitle())
                 .message(request.getMessage())
                 .build();
+
+        if (request.isEmergency()) {
+
+            Appointment appointment = appointmentRepository
+                    .findById(request.getAppointmentId())
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Appointment not found"));
+
+            appointment.setStatus(AppointmentStatus.CANCELLED);
+
+            appointmentRepository.save(appointment);
+        }
 
         return map(notificationRepository.save(notification));
     }

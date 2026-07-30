@@ -75,16 +75,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGlobalException(Exception ex) {
 
-        ex.printStackTrace(); // Console मध्ये पूर्ण error दिसेल
 
-        Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        error.put("message", ex.getMessage());
+    @ExceptionHandler(SpeechToTextException.class)
+    public ResponseEntity<?> handleSpeechToTextException(
+            SpeechToTextException ex) {
 
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "status", 400,
+                        "message", ex.getMessage(),
+                        "timestamp", LocalDateTime.now()
+                ));
     }
 }

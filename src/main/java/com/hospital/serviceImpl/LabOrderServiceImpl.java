@@ -212,9 +212,16 @@ public class LabOrderServiceImpl implements LabOrderService {
 
     private LabOrderResponse mapToResponse(LabOrder labOrder) {
 
+        Patient patient = labOrder.getAppointment().getPatient();
+
         return LabOrderResponse.builder()
                 .id(labOrder.getId())
                 .appointmentId(labOrder.getAppointment().getId())
+
+                .patientName(
+                        patient.getFirstName() + " " + patient.getLastName()
+                )
+
                 .labTestId(labOrder.getLabTest().getId())
                 .labTestName(labOrder.getLabTest().getTestName())
                 .clinicalNotes(labOrder.getClinicalNotes())

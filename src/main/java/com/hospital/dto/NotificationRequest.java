@@ -19,4 +19,8 @@ public class NotificationRequest {
     @NotBlank(message = "Message is required")
     private String message;
 
+    private Long appointmentId;
+
+    private boolean emergency;
+
 }

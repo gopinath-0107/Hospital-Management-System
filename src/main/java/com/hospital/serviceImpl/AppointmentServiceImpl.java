@@ -51,6 +51,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                                 "Doctor not found with ID: " + request.getDoctorId()
                         ));
 
+
         Department department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(

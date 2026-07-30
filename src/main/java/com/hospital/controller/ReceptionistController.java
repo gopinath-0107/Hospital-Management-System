@@ -137,6 +137,7 @@ public class ReceptionistController {
     }
 
     @GetMapping("/consultation-receipt/{appointmentId}")
+    @PreAuthorize("hasAnyRole('PATIENT','ADMIN','RECEPTIONIST')")
     public ResponseEntity<ReceiptResponse> consultationReceipt(
             @PathVariable Long appointmentId) {
 

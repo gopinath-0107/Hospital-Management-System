@@ -61,8 +61,9 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-
+                        // ==========================
                         // Public APIs
+                        // ==========================
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/register/patient",
@@ -72,12 +73,33 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**"
-                        )
-                        .permitAll()
+                        ).permitAll()
 
+                        // ==========================
+                        // Receipt APIs
+                        // IMPORTANT:
+                        // Keep these BEFORE
+                        // /api/receptionists/**
+                        // /api/pharmacy/**
+                        // /api/lab-technicians/**
+                        // ==========================
 
+                        .requestMatchers(
+                                "/api/receptionists/consultation-receipt/**"
+                        ).hasAnyRole("PATIENT", "ADMIN", "RECEPTIONIST")
 
-                        // Admin APIs
+                        .requestMatchers(
+                                "/api/pharmacy/receipt/**"
+                        ).hasAnyRole("PATIENT", "ADMIN", "RECEPTIONIST")
+
+                        .requestMatchers(
+                                "/api/lab-technicians/receipt/**"
+                        ).hasAnyRole("PATIENT", "ADMIN", "RECEPTIONIST")
+
+                        // ==========================
+                        // Admin Only
+                        // ==========================
+
                         .requestMatchers(
                                 "/api/auth/register/doctor",
                                 "/api/auth/register/nurse",
@@ -85,26 +107,35 @@ public class SecurityConfig {
                                 "/api/nurses",
                                 "/api/receptionists",
                                 "/api/lab-technicians"
-                        )
-                        .hasRole("ADMIN")
+                        ).hasRole("ADMIN")
 
+                        // ==========================
+                        // Receptionist
+                        // ==========================
 
                         .requestMatchers("/api/receptionists/**")
                         .hasRole("RECEPTIONIST")
 
+                        // ==========================
+                        // Pharmacist
+                        // ==========================
+
+                        .requestMatchers("/api/pharmacy/**")
+                        .hasRole("PHARMACIST")
+
+                        // ==========================
+                        // Lab Technician
+                        // ==========================
 
                         .requestMatchers("/api/lab-technicians/**")
                         .hasRole("LAB_TECHNICIAN")
 
+                        // ==========================
+                        // Nurse
+                        // ==========================
 
-                        .requestMatchers(
-                                "/api/nurses/**"
-
-
-                        )
+                        .requestMatchers("/api/nurses/**")
                         .authenticated()
-
-
 
                         .anyRequest()
                         .authenticated()

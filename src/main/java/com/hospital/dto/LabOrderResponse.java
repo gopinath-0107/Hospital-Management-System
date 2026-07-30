@@ -15,6 +15,7 @@ public class LabOrderResponse {
     private Long appointmentId;
     private Long labTestId;
     private String labTestName;
+    private String patientName;
     private String clinicalNotes;
 
     private LabPriority priority;
