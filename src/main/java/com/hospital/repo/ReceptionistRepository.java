@@ -16,6 +16,11 @@ public interface ReceptionistRepository
 
     Optional<Receptionist> findByEmail(String email);
 
+    Optional<Receptionist> findByEmailOrMobile(
+            String email,
+            String mobile
+    );
+
     boolean existsByEmail(String email);
 
 

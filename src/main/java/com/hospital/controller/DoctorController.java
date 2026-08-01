@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -27,10 +28,46 @@ public class DoctorController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/department/{departmentId}")
-    @Operation(summary = "Get all available Doctors belonging to a specific Department (Any authenticated user)")
-    public ResponseEntity<List<DoctorResponse>> getAvailableDoctors(@PathVariable Long departmentId) {
-        List<DoctorResponse> response = doctorService.getAvailableDoctorsByDepartment(departmentId);
-        return ResponseEntity.ok(response);
+
+    @GetMapping
+    @Operation(summary = "Get Doctor By Department & Specilization")
+    public ResponseEntity<List<DoctorResponse>> getDoctors(
+
+            @RequestParam Long departmentId,
+            @RequestParam Long specializationId
+
+    ) {
+
+        return ResponseEntity.ok(
+                doctorService.getDoctors(
+                        departmentId,
+                        specializationId
+                )
+        );
+    }
+
+
+    @GetMapping("/all")
+    @Operation(summary = "Get All Doctors")
+    public ResponseEntity<List<DoctorResponse>> getAllDoctors() {
+
+        return ResponseEntity.ok(
+                doctorService.getAllDoctors()
+        );
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<DoctorResponse>> getAvailableDoctors(
+            @RequestParam LocalDate date,
+            @RequestParam Long departmentId,
+            @RequestParam Long specializationId) {
+
+        return ResponseEntity.ok(
+                doctorService.getAvailableDoctors(
+                        date,
+                        departmentId,
+                        specializationId
+                )
+        );
     }
 }

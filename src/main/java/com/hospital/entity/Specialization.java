@@ -39,20 +39,24 @@ public class Specialization {
     )
     private String specializationName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "department_id",
-            nullable = false
-    )
+    @ManyToOne
+    @JoinColumn(name = "department_id")
     private Department department;
+
+    @OneToMany(mappedBy = "specialization")
+    private List<Doctor> doctors;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private Status status = Status.ACTIVE;
 
-    @OneToMany(mappedBy = "specialization")
-    private List<Doctor> doctors;
+
+
+    @Column(name="specialization_code",
+            unique = true,
+            nullable = false)
+    private String specializationCode;
 
     @CreationTimestamp
     @Column(

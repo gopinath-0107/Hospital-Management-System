@@ -18,6 +18,7 @@ public class DepartmentResponse {
     private String description;
     private Integer floorNumber;
     private Status status;
+    private String departmentCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

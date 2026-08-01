@@ -30,16 +30,15 @@ public class Department {
     @Column(nullable = false)
     private Integer floorNumber;
 
+    @Column(name = "department_code", unique = true, nullable = false, length = 10)
+    private String departmentCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private com.hospital.enums.Status status = com.hospital.enums.Status.ACTIVE;
 
-    @OneToMany(
-            mappedBy = "department",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "department")
     private List<Specialization> specializations;
 
     @CreationTimestamp

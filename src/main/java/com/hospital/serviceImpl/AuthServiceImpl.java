@@ -48,7 +48,10 @@ public class AuthServiceImpl implements AuthService {
 
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()
+                    )
             );
 
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -59,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
                     .role(Role.valueOf(userDetails.getRole()))
                     .userId(userDetails.getId())
                     .name(userDetails.getName())
-                    .email(userDetails.getUsername())
+                    .username(userDetails.getUsername())
                     .build();
         } catch (AuthenticationException e) {
             e.printStackTrace();

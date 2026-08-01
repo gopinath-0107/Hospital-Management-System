@@ -24,6 +24,8 @@ public class SpecializationResponse {
 
     private Status status;
 
+    private String specializationCode;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

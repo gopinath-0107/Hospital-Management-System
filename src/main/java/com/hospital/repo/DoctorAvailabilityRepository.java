@@ -25,6 +25,13 @@ public interface DoctorAvailabilityRepository extends JpaRepository<DoctorAvaila
             AvailabilityStatus status
     );
 
+    List<DoctorAvailability> findByAvailableDateAndStatusAndDoctorDepartmentIdAndDoctorSpecializationId(
+            LocalDate availableDate,
+            AvailabilityStatus status,
+            Long departmentId,
+            Long specializationId
+    );
+
     boolean existsByDoctorIdAndAvailableDate(
             Long doctorId,
             LocalDate availableDate

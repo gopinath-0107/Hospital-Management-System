@@ -9,6 +9,11 @@ public interface PharmacistRepository extends JpaRepository<Pharmacist, Long> {
 
     Optional<Pharmacist> findByEmail(String email);
 
+    Optional<Pharmacist> findByEmailOrMobile(
+            String email,
+            String mobile
+    );
+
     boolean existsByEmail(String email);
 
     boolean existsByMobile(String mobile);

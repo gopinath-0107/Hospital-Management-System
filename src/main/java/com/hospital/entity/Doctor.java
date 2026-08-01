@@ -40,22 +40,19 @@ public class Doctor {
     @Column(nullable = false)
     private Gender gender;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
+
+    @ManyToOne
+    @JoinColumn(name = "specialization_id")
+    private Specialization specialization;
 
     @Column(nullable = false)
     private String qualification;
 
     @Column(nullable = false)
     private Integer experience;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "specialization_id",
-            nullable = false
-    )
-    private Specialization specialization;
 
     @Column(nullable = false)
     private java.math.BigDecimal consultationFee;

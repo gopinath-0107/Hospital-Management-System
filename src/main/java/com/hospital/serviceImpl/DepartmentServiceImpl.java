@@ -10,8 +10,13 @@ import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.DepartmentRepository;
 import com.hospital.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +29,54 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional
+    public void importDepartments(MultipartFile file) {
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+
+                Row row = sheet.getRow(i);
+
+                if (row == null) {
+                    continue;
+                }
+
+                DepartmentRequest request = new DepartmentRequest();
+
+                request.setDepartmentCode(
+                        row.getCell(0).getStringCellValue().trim());
+
+                request.setDepartmentName(
+                        row.getCell(1).getStringCellValue().trim());
+
+                request.setDescription(
+                        row.getCell(2).getStringCellValue().trim());
+
+                request.setFloorNumber(
+                        (int) row.getCell(3).getNumericCellValue());
+
+                request.setStatus(
+                        Status.valueOf(
+                                row.getCell(4)
+                                        .getStringCellValue()
+                                        .trim()
+                                        .toUpperCase()
+                        )
+                );
+
+                createDepartment(request);
+
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to import departments.", e);
+        }
+    }
+
+    @Override
+    @Transactional
     public DepartmentResponse createDepartment(DepartmentRequest request) {
         if (departmentRepository.existsByDepartmentName(request.getDepartmentName())) {
             throw new DuplicateResourceException("Department with name '" + request.getDepartmentName() + "' already exists.");
@@ -31,9 +84,10 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         Department department = Department.builder()
                 .departmentName(request.getDepartmentName())
+                .departmentCode(request.getDepartmentCode())
                 .description(request.getDescription())
                 .floorNumber(request.getFloorNumber())
-                .status(Status.ACTIVE)
+                .status(request.getStatus())
                 .build();
 
         Department saved = departmentRepository.save(department);

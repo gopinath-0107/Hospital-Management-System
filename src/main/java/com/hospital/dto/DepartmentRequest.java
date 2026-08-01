@@ -34,10 +34,18 @@ public class DepartmentRequest {
     )
     private String description;
 
-    @NotNull(message = "Floor number is required")
+
     @Min(value = 0, message = "Floor number cannot be negative")
     @Max(value = 100, message = "Floor number cannot be greater than 100")
     private Integer floorNumber;
+
+    @NotBlank(message = "Department code is required")
+    @Size(min = 2, max = 10, message = "Department code must be between 2 and 10 characters")
+    @Pattern(
+            regexp = "^[A-Z0-9]+$",
+            message = "Department code must contain only uppercase letters and numbers"
+    )
+    private String departmentCode;
 
     @NotNull(message = "Status is required")
     private Status status;

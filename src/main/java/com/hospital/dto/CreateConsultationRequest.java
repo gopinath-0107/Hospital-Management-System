@@ -12,11 +12,6 @@ public class CreateConsultationRequest {
     @Positive(message = "Appointment Id must be greater than 0")
     private Long appointmentId;
 
-    @NotEmpty(message = "At least one symptom is required")
-    private List<
-            @NotNull(message = "Symptom Id cannot be null")
-            @Positive(message = "Invalid Symptom Id")
-                    Long> symptomIds;
 
     @NotBlank(message = "Blood pressure is required")
     @Pattern(

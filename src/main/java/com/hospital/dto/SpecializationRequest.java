@@ -21,8 +21,12 @@ public class SpecializationRequest {
     )
     private String specializationName;
 
-    @NotNull(message = "Department ID is required")
-    @Positive(message = "Department ID must be greater than 0")
-    private Long departmentId;
+    @NotBlank(message = "Department code is required")
+    private String departmentCode;
+
+    @NotBlank(message = "Specialization code is required")
+    private String specializationCode;
+
+
 
 }

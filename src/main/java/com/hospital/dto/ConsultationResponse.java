@@ -23,7 +23,6 @@ public class ConsultationResponse {
     private Long patientId;
 
 
-    private List<String> symptoms;
 
 
     private String bloodPressure;

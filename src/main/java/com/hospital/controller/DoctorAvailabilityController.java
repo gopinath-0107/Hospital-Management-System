@@ -2,6 +2,7 @@ package com.hospital.controller;
 
 import com.hospital.dto.DoctorAvailabilityRequest;
 import com.hospital.dto.DoctorAvailabilityResponse;
+import com.hospital.dto.DoctorResponse;
 import com.hospital.service.DoctorAvailabilityService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,8 @@ public class DoctorAvailabilityController {
                 doctorAvailabilityService.getDoctorAvailability(doctorId)
         );
     }
+
+
 
     @GetMapping("/date")
     public ResponseEntity<List<DoctorAvailabilityResponse>> getAvailabilityByDate(

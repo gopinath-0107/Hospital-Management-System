@@ -11,6 +11,11 @@ public interface NurseRepository extends JpaRepository<Nurse, Long> {
 
     Optional<Nurse> findByEmail(String email);
 
+    Optional<Nurse> findByEmailOrMobile(
+            String email,
+            String mobile
+    );
+
     boolean existsByEmail(String email);
 
     boolean existsByMobile(String mobile);

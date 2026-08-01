@@ -33,13 +33,6 @@ public class Consultation {
     private Patient patient;
 
 
-    @ManyToMany
-    @JoinTable(
-            name = "consultation_symptoms",
-            joinColumns = @JoinColumn(name = "consultation_id"),
-            inverseJoinColumns = @JoinColumn(name = "symptom_id")
-    )
-    private List<Symptom> symptoms;
 
 
     private String bloodPressure;

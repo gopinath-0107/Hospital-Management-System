@@ -33,7 +33,6 @@ public class ConsultationServiceImpl implements ConsultationService {
     private final ConsultationRepository consultationRepository;
     private final AppointmentRepository appointmentRepository;
     private final DoctorRepository doctorRepository;
-    private final SymptomRepository symptomRepository;
     private final HospitalNotificationService hospitalNotificationService;
 
 
@@ -103,28 +102,13 @@ public class ConsultationServiceImpl implements ConsultationService {
             );
         }
 
-        // 4. Get Symptoms
-
-        List<Symptom> symptoms =
-                symptomRepository.findAllById(
-                        request.getSymptomIds()
-                );
-
-        if (symptoms.isEmpty()) {
-
-            throw new ResourceNotFoundException(
-                    "Symptoms not found"
-            );
-        }
-
-        // 5. Create Consultation
+        // 4. Create Consultation
 
         Consultation consultation = new Consultation();
 
         consultation.setAppointment(appointment);
         consultation.setDoctor(doctor);
         consultation.setPatient(appointment.getPatient());
-        consultation.setSymptoms(symptoms);
         consultation.setBloodPressure(request.getBloodPressure());
         consultation.setTemperature(request.getTemperature());
         consultation.setPulseRate(request.getPulseRate());
@@ -226,12 +210,6 @@ public class ConsultationServiceImpl implements ConsultationService {
         );
 
 
-        response.setSymptoms(
-                consultation.getSymptoms()
-                        .stream()
-                        .map(Symptom::getSymptomName)
-                        .toList()
-        );
 
 
         response.setBloodPressure(

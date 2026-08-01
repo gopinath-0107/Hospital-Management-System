@@ -5,6 +5,7 @@ import com.hospital.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -75,14 +76,7 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        // ==========================
-                        // Receipt APIs
-                        // IMPORTANT:
-                        // Keep these BEFORE
-                        // /api/receptionists/**
-                        // /api/pharmacy/**
-                        // /api/lab-technicians/**
-                        // ==========================
+
 
                         .requestMatchers(
                                 "/api/receptionists/consultation-receipt/**"
@@ -95,6 +89,24 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/lab-technicians/receipt/**"
                         ).hasAnyRole("PATIENT", "ADMIN", "RECEPTIONIST")
+
+
+                                // ==========================
+// Doctor APIs
+// ==========================
+
+
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/api/doctors",
+                                        "/api/doctors/**"
+                                )
+                                .hasAnyRole(
+                                        "PATIENT",
+                                        "ADMIN",
+                                        "DOCTOR",
+                                        "RECEPTIONIST"
+                                )
 
                         // ==========================
                         // Admin Only

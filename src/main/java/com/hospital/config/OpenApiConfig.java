@@ -18,7 +18,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Hospital Management System API")
                         .version("1.0")
-                        .description("API Documentation for HMS including Authentication, Department, Symptom Master, and Appointment flow."))
+                        .description("API Documentation for HMS including Authentication, Department, and Appointment flow."))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,

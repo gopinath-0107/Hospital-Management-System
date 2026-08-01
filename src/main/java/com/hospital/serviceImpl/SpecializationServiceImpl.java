@@ -10,8 +10,10 @@ import com.hospital.repo.DepartmentRepository;
 import com.hospital.repo.SpecializationRepository;
 import com.hospital.service.SpecializationService;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +25,54 @@ public class SpecializationServiceImpl implements SpecializationService {
     private final SpecializationRepository specializationRepository;
     private final DepartmentRepository departmentRepository;
 
+
+    @Override
+    @Transactional
+    public void importSpecializations(MultipartFile file) {
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+
+                Row row = sheet.getRow(i);
+
+                if (row == null) {
+                    continue;
+                }
+
+                // Skip blank rows
+                if (formatter.formatCellValue(row.getCell(0)).trim().isEmpty()) {
+                    continue;
+                }
+
+                SpecializationRequest request = new SpecializationRequest();
+
+                request.setSpecializationCode(
+                        formatter.formatCellValue(row.getCell(0)).trim()
+                );
+
+                request.setSpecializationName(
+                        formatter.formatCellValue(row.getCell(1)).trim()
+                );
+
+                request.setDepartmentCode(
+                        formatter.formatCellValue(row.getCell(2)).trim()
+                );
+
+                // Existing Method Reuse
+                createSpecialization(request);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Failed to import Specializations : " + e.getMessage(),
+                    e
+            );
+        }
+    }
     @Override
     @Transactional
     public SpecializationResponse createSpecialization(
@@ -30,11 +80,12 @@ public class SpecializationServiceImpl implements SpecializationService {
     ) {
 
         Department department =
-                departmentRepository.findById(request.getDepartmentId())
+                departmentRepository
+                        .findByDepartmentCode(request.getDepartmentCode())
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
-                                        "Department not found with ID : "
-                                                + request.getDepartmentId()
+                                        "Department not found with code : "
+                                                + request.getDepartmentCode()
                                 ));
 
         boolean exists =
@@ -53,6 +104,7 @@ public class SpecializationServiceImpl implements SpecializationService {
 
         Specialization specialization =
                 Specialization.builder()
+                        .specializationCode(request.getSpecializationCode())
                         .specializationName(request.getSpecializationName())
                         .department(department)
                         .status(Status.ACTIVE)
@@ -79,10 +131,12 @@ public class SpecializationServiceImpl implements SpecializationService {
                                 ));
 
         Department department =
-                departmentRepository.findById(request.getDepartmentId())
+                departmentRepository
+                        .findByDepartmentCode(request.getDepartmentCode())
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
-                                        "Department not found."
+                                        "Department not found with code : "
+                                                + request.getDepartmentCode()
                                 ));
 
         boolean exists =

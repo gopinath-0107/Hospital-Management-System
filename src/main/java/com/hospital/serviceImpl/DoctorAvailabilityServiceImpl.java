@@ -8,6 +8,7 @@ import com.hospital.entity.DoctorAvailability;
 import com.hospital.entity.Notification;
 import com.hospital.enums.AppointmentStatus;
 import com.hospital.enums.AvailabilityStatus;
+import com.hospital.exception.BadRequestException;
 import com.hospital.exception.ResourceNotFoundException;
 import com.hospital.repo.AppointmentRepository;
 import com.hospital.repo.DoctorAvailabilityRepository;
@@ -44,38 +45,34 @@ public class DoctorAvailabilityServiceImpl
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Doctor not found with id : "
-                                        + request.getDoctorId()));
+                                "Doctor not found with id : " + request.getDoctorId()));
 
-        boolean exists =
-                doctorAvailabilityRepository.existsByDoctorIdAndAvailableDate(
-                        doctor.getId(),
-                        request.getAvailableDate()
-                );
 
-        if (exists) {
-            throw new RuntimeException(
-                    "Availability already exists for this doctor on selected date."
-            );
-        }
 
         validateRequest(request);
 
-        DoctorAvailability availability =
-                DoctorAvailability.builder()
-                        .doctor(doctor)
-                        .availableDate(request.getAvailableDate())
-                        .status(request.getStatus())
-                        .startTime(request.getStartTime())
-                        .endTime(request.getEndTime())
-                        .build();
+        boolean exists = doctorAvailabilityRepository
+                .existsByDoctorIdAndAvailableDate(
+                        doctor.getId(),
+                        request.getAvailableDate());
 
-        DoctorAvailability saved =
-                doctorAvailabilityRepository.save(availability);
+        if (exists) {
+            throw new BadRequestException(
+                    "Availability already exists for this doctor on selected date.");
+        }
+
+        DoctorAvailability availability = DoctorAvailability.builder()
+                .doctor(doctor)
+                .availableDate(request.getAvailableDate())
+                .status(request.getStatus())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .build();
+
+        DoctorAvailability saved = doctorAvailabilityRepository.save(availability);
 
         return mapToResponse(saved);
     }
-
     @Override
     @Transactional
     public DoctorAvailabilityResponse updateAvailability(

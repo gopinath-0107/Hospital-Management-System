@@ -13,6 +13,8 @@ public interface SpecializationRepository extends JpaRepository<Specialization, 
 
     Optional<Specialization> findById(Long id);
 
+    boolean existsBySpecializationCode(String specializationCode);
+
     List<Specialization> findByDepartmentId(Long departmentId);
 
     List<Specialization> findByStatus(Status status);

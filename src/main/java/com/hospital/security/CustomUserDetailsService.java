@@ -26,40 +26,55 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Optional<Admin> admin = adminRepository.findByEmail(email);
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<Admin> admin = adminRepository.findByEmail(username);
         if (admin.isPresent()) {
             Admin a = admin.get();
             return new CustomUserDetails(a.getEmail(), a.getPassword(), Role.ADMIN.name(), a.getId(), a.getEmail());
         }
 
-        Optional<Doctor> doctor = doctorRepository.findByEmail(email);
+        Optional<Doctor> doctor = doctorRepository.findByEmailOrMobile(
+                username,
+                username
+        );
         if (doctor.isPresent()) {
             Doctor d = doctor.get();
             return new CustomUserDetails(d.getEmail(), d.getPassword(), Role.DOCTOR.name(), d.getId(), d.getFirstName() + " " + d.getLastName());
         }
 
-        Optional<Patient> patient = patientRepository.findByEmail(email);
+        Optional<Patient> patient = patientRepository.findByEmailOrMobile(
+                username,
+                username
+        );
         if (patient.isPresent()) {
             Patient p = patient.get();
             return new CustomUserDetails(p.getEmail(), p.getPassword(), Role.PATIENT.name(), p.getId(), p.getFirstName() + " " + p.getLastName());
         }
 
-        Optional<Nurse> nurse = nurseRepository.findByEmail(email);
+        Optional<Nurse> nurse = nurseRepository.findByEmailOrMobile(
+                username,
+                username
+        );
         if (nurse.isPresent()) {
             Nurse n = nurse.get();
             return new CustomUserDetails(n.getEmail(), n.getPassword(), Role.NURSE.name(), n.getId(), n.getFirstName() + " " + n.getLastName());
         }
 
 
-        Optional<LabTechnician> labTechnician = labTechnicianRepository.findByEmail(email);
+        Optional<LabTechnician> labTechnician = labTechnicianRepository.findByEmailOrMobile(
+                username,
+                username
+        );
         if (labTechnician.isPresent()) {
             LabTechnician n = labTechnician.get();
             return new CustomUserDetails(n.getEmail(), n.getPassword(), Role.LAB_TECHNICIAN.name(), n.getId(), n.getFirstName() + " " + n.getLastName());
         }
 
 
-        Optional<Pharmacist> pharmacist = pharmacistRepository.findByEmail(email);
+        Optional<Pharmacist> pharmacist = pharmacistRepository.findByEmailOrMobile(
+                username,
+                username
+        );
 
 
         if (pharmacist.isPresent()) {
@@ -80,7 +95,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
 
-        Optional <Receptionist> receptionist = receptionistRepository.findByEmail(email);
+        Optional <Receptionist> receptionist = receptionistRepository.findByEmailOrMobile(
+                username,
+                username
+        );
 
         if (receptionist.isPresent()) {
             Receptionist n = receptionist.get();
@@ -90,6 +108,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 
 
-        throw new UsernameNotFoundException("User not found with email: " + email);
+        throw new UsernameNotFoundException(
+                "User not found with Email or Mobile."
+        );
     }
 }
