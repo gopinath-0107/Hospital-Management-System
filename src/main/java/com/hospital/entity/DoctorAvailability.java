@@ -44,10 +44,10 @@ public class DoctorAvailability {
     @Column(nullable = false)
     private AvailabilityStatus status;
 
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "start_time")
     private LocalTime startTime;
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time")
     private LocalTime endTime;
 
     @CreationTimestamp

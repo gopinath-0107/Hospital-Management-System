@@ -19,10 +19,8 @@ public class DoctorAvailabilityRequest {
     @NotNull(message = "Status is required")
     private AvailabilityStatus status;
 
-    @NotNull(message = "Start Time is required")
     private LocalTime startTime;
 
-    @NotNull(message = "End Time is required")
     private LocalTime endTime;
 
 }

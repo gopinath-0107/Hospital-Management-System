@@ -141,18 +141,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
 
-        boolean pendingAppointment =
-                appointmentRepository.existsByPatientIdAndStatus(
-                        patient.getId(),
-                        AppointmentStatus.PENDING
-                );
 
-        if (pendingAppointment) {
-
-            throw new BadRequestException(
-                    "You already have a pending appointment."
-            );
-        }
 
         LocalDate appointmentDay = appointmentDate.toLocalDate();
 
@@ -213,7 +202,6 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .doctor(doctor)
                 .department(department)
                 .appointmentDate(request.getAppointmentDate())
-                .symptoms(request.getSymptoms())
                 .status(AppointmentStatus.PENDING)
                 .build();
 
@@ -294,7 +282,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .departmentId(app.getDepartment().getId())
                 .departmentName(app.getDepartment().getDepartmentName())
                 .appointmentDate(app.getAppointmentDate())
-                .symptoms(app.getSymptoms())
+
                 .status(app.getStatus())
                 .createdAt(app.getCreatedAt())
                 .updatedAt(app.getUpdatedAt())

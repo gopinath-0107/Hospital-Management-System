@@ -20,7 +20,7 @@ public class DoctorAvailabilityController {
 
     private final DoctorAvailabilityService doctorAvailabilityService;
 
-    @PreAuthorize("hasRole('RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST','DOCTOR')")
     @PostMapping
     public ResponseEntity<DoctorAvailabilityResponse> createAvailability(
             @Valid
@@ -32,7 +32,7 @@ public class DoctorAvailabilityController {
         );
     }
 
-    @PreAuthorize("hasRole('RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST','DOCTOR')")
     @PutMapping("/{id}")
     public ResponseEntity<DoctorAvailabilityResponse> updateAvailability(
             @PathVariable Long id,
@@ -77,7 +77,7 @@ public class DoctorAvailabilityController {
         );
     }
 
-    @PreAuthorize("hasRole('RECEPTIONIST')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST','DOCTOR')")
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAvailability(
             @PathVariable Long id

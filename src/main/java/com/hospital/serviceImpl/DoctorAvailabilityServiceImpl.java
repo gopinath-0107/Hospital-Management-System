@@ -82,29 +82,33 @@ public class DoctorAvailabilityServiceImpl
         DoctorAvailability availability =
                 doctorAvailabilityRepository.findById(id)
                         .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Availability not found"));
+                                new ResourceNotFoundException("Availability not found"));
 
         Doctor doctor =
                 doctorRepository.findById(request.getDoctorId())
                         .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Doctor not found"));
-
-        validateRequest(request);
+                                new ResourceNotFoundException("Doctor not found"));
 
         availability.setDoctor(doctor);
         availability.setAvailableDate(request.getAvailableDate());
         availability.setStatus(request.getStatus());
-        availability.setStartTime(request.getStartTime());
-        availability.setEndTime(request.getEndTime());
+
+        if (request.getStatus() == AvailabilityStatus.AVAILABLE) {
+
+            availability.setStartTime(request.getStartTime());
+            availability.setEndTime(request.getEndTime());
+
+        } else {
+
+            availability.setStartTime(null);
+            availability.setEndTime(null);
+        }
 
         DoctorAvailability updated =
                 doctorAvailabilityRepository.save(availability);
 
         return mapToResponse(updated);
     }
-
     @Override
     @Transactional(readOnly = true)
     public DoctorAvailabilityResponse getAvailability(Long id) {
@@ -177,52 +181,36 @@ public class DoctorAvailabilityServiceImpl
     // Validation
     // ===================================================
 
-    private void validateRequest(
-            DoctorAvailabilityRequest request) {
+    private void validateRequest(DoctorAvailabilityRequest request) {
 
         if (request.getAvailableDate().isBefore(LocalDate.now())) {
-
-            throw new RuntimeException(
-                    "Availability date cannot be in past."
-            );
+            throw new BadRequestException("Availability date cannot be in past.");
         }
 
         if (request.getStatus() == AvailabilityStatus.AVAILABLE) {
 
-            if (request.getStartTime() == null
-                    || request.getEndTime() == null) {
-
-                throw new RuntimeException(
-                        "Start Time and End Time are required."
-                );
+            if (request.getStartTime() == null || request.getEndTime() == null) {
+                throw new BadRequestException("Start Time and End Time are required.");
             }
 
-            if (!request.getStartTime()
-                    .isBefore(request.getEndTime())) {
-
-                throw new RuntimeException(
-                        "Start time must be before End time."
-                );
+            if (!request.getStartTime().isBefore(request.getEndTime())) {
+                throw new BadRequestException("Start Time must be before End Time.");
             }
 
-            LocalTime hospitalStart =
-                    LocalTime.of(10, 0);
-
-            LocalTime hospitalEnd =
-                    LocalTime.of(20, 0);
+            LocalTime hospitalStart = LocalTime.of(10, 0);
+            LocalTime hospitalEnd = LocalTime.of(20, 0);
 
             if (request.getStartTime().isBefore(hospitalStart)
                     || request.getEndTime().isAfter(hospitalEnd)) {
 
-                throw new RuntimeException(
-                        "Hospital timing is 10 AM to 8 PM."
-                );
+                throw new BadRequestException("Hospital timing is 10 AM to 8 PM.");
             }
-
+        } else {
+            // LEAVE / UNAVAILABLE / EMERGENCY साठी वेळ आवश्यक नाही
+            request.setStartTime(null);
+            request.setEndTime(null);
         }
-
     }
-
 
     @Override
     @Transactional

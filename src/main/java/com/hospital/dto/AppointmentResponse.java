@@ -21,7 +21,7 @@ public class AppointmentResponse {
     private Long departmentId;
     private String departmentName;
     private LocalDateTime appointmentDate;
-    private String symptoms;
+
     private AppointmentStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

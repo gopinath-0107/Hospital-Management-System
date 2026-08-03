@@ -32,12 +32,6 @@ public class AppointmentRequest {
     @Future(message = "Appointment date must be in the future")
     private LocalDateTime appointmentDate;
 
-    @NotBlank(message = "Symptoms are required")
-    @Size(
-            min = 5,
-            max = 500,
-            message = "Symptoms must be between 5 and 500 characters"
-    )
-    private String symptoms;
+
 
 }
