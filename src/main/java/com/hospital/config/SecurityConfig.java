@@ -149,7 +149,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/nurses/**")
                         .authenticated()
+                             //wards
 
+                                .requestMatchers("/api/wards/**").authenticated()
                         .anyRequest()
                         .authenticated()
                 )
